@@ -13,6 +13,11 @@ const SidebarContainer = styled.div`
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  transition: transform 0.3s ease-in-out;
+
+  @media (max-width: 768px) {
+    transform: translateX(${props => (props.isOpen ? '0' : '-100%')});
+  }
 `;
 
 const SidebarHeader = styled.div`
@@ -47,7 +52,7 @@ const DropdownContent = styled.div`
   padding-left: 20px;
 `;
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen }) => {
   const [openTasks, setOpenTasks] = useState(false);
 
   const handleClick = () => {
@@ -55,7 +60,7 @@ const Sidebar = () => {
   };
 
   return (
-    <SidebarContainer>
+    <SidebarContainer isOpen={isOpen}>
       <SidebarHeader>Admin Dashboard</SidebarHeader>
       <nav>
         <div>
