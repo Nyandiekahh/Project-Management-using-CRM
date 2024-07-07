@@ -3,7 +3,9 @@ import styled from 'styled-components';
 import Sidebar from '../components/Sidebar';
 import TopBar from '../components/TopBar';
 import TaskForm from '../components/TaskForm';
+import UserForm from '../components/UserForm';
 import tasksData from '../tasks.json'; // Import the JSON file
+import usersData from '../users.json'; // Import the JSON file
 
 const Content = styled.div`
   margin-left: 250px;
@@ -138,8 +140,12 @@ const generateTaskId = (existingIds) => {
 
 const AdminDashboard = () => {
   const [tasks, setTasks] = useState([]);
-  const [showForm, setShowForm] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [showTaskForm, setShowTaskForm] = useState(false);
+  const [showUserForm, setShowUserForm] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
+  const [editingUser, setEditingUser] = useState(null);
+
   const officers = [
     { id: 1, name: 'Officer 1' },
     { id: 2, name: 'Officer 2' },
@@ -149,6 +155,8 @@ const AdminDashboard = () => {
   useEffect(() => {
     const storedTasks = JSON.parse(localStorage.getItem('tasks')) || tasksData;
     setTasks(storedTasks);
+    const storedUsers = JSON.parse(localStorage.getItem('users')) || usersData;
+    setUsers(storedUsers);
   }, []);
 
   // Save tasks to local storage
@@ -156,12 +164,17 @@ const AdminDashboard = () => {
     localStorage.setItem('tasks', JSON.stringify(tasks));
   };
 
+  // Save users to local storage
+  const saveUsersToLocalStorage = (users) => {
+    localStorage.setItem('users', JSON.stringify(users));
+  };
+
   const handleCreateTask = (newTask) => {
     const taskId = generateTaskId(tasks.map(task => task.id));
     const updatedTasks = [...tasks, { ...newTask, id: taskId }];
     setTasks(updatedTasks);
     saveTasksToLocalStorage(updatedTasks);
-    setShowForm(false);
+    setShowTaskForm(false);
     setEditingTask(null);
   };
 
@@ -171,13 +184,13 @@ const AdminDashboard = () => {
     );
     setTasks(updatedTasks);
     saveTasksToLocalStorage(updatedTasks);
-    setShowForm(false);
+    setShowTaskForm(false);
     setEditingTask(null);
   };
 
   const handleEditTask = (task) => {
     setEditingTask(task);
-    setShowForm(true);
+    setShowTaskForm(true);
   };
 
   const handleDeleteTask = (taskId) => {
@@ -186,28 +199,61 @@ const AdminDashboard = () => {
     saveTasksToLocalStorage(updatedTasks);
   };
 
-  const toggleForm = () => {
-    setShowForm(!showForm);
+  const handleCreateUser = (newUser) => {
+    const userId = generateTaskId(users.map(user => user.id)); // Reuse generateTaskId function for user IDs
+    const updatedUsers = [...users, { ...newUser, id: userId }];
+    setUsers(updatedUsers);
+    saveUsersToLocalStorage(updatedUsers);
+    setShowUserForm(false);
+    setEditingUser(null);
+  };
+
+  const handleUpdateUser = (updatedUser) => {
+    const updatedUsers = users.map(user =>
+      user.id === updatedUser.id ? updatedUser : user
+    );
+    setUsers(updatedUsers);
+    saveUsersToLocalStorage(updatedUsers);
+    setShowUserForm(false);
+    setEditingUser(null);
+  };
+
+  const toggleTaskForm = () => {
+    setShowTaskForm(!showTaskForm);
     setEditingTask(null);
+  };
+
+  const toggleUserForm = () => {
+    setShowUserForm(!showUserForm);
+    setEditingUser(null);
   };
 
   return (
     <div>
-      <Sidebar onCreateTaskClick={toggleForm} />
+      <Sidebar onCreateTaskClick={toggleTaskForm} onCreateUserClick={toggleUserForm} />
       <TopBar user="Admin" />
       <Content>
         <WelcomeMessage>
           Welcome back, Admin
           <p>We're delighted to have you. Need help on system walk through? Navigate to virtual assistant on the side menu.</p>
         </WelcomeMessage>
-        <Button onClick={toggleForm}>
-          {showForm ? 'Hide Form' : 'Create New Task'}
+        <Button onClick={toggleTaskForm}>
+          {showTaskForm ? 'Hide Task Form' : 'Create New Task'}
         </Button>
-        {showForm && (
+        <Button onClick={toggleUserForm}>
+          {showUserForm ? 'Hide User Form' : 'Create New User'}
+        </Button>
+        {showTaskForm && (
           <TaskForm
             officers={officers}
             onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
             initialTask={editingTask}
+          />
+        )}
+        {showUserForm && (
+          <UserForm
+            onSubmit={editingUser ? handleUpdateUser : handleCreateUser}
+            initialUser={editingUser || {}} // Ensure initialUser is not null
           />
         )}
         <CurrentTasks>

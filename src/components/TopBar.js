@@ -1,89 +1,67 @@
-import React, { useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 
 const TopBarContainer = styled.div`
+  width: 100%;
   height: 60px;
-  background-color: #f8f9fa;
+  background-color: #34495e;
+  color: white;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   padding: 0 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: fixed;
   top: 0;
   left: 250px;
-  right: 0;
+  z-index: 1000;
 
   @media (max-width: 768px) {
     left: 0;
   }
 `;
 
-const MenuButton = styled.button`
-  display: none;
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
+const UserDropdown = styled.div`
+  position: relative;
+  display: inline-block;
 
-  @media (max-width: 768px) {
+  &:hover .dropdown-content {
     display: block;
   }
 `;
 
-const UserMenu = styled.div`
-  display: flex;
-  align-items: center;
-`;
-
-const UserName = styled.div`
-  margin-right: 10px;
-  font-size: 16px;
-  cursor: pointer;
-`;
-
-const DropdownMenu = styled.div`
+const DropdownContent = styled.div`
+  display: none;
   position: absolute;
-  top: 60px;
-  right: 20px;
+  right: 0;
   background-color: white;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-`;
+  color: black;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
 
-const DropdownItem = styled.button`
-  width: 100%;
-  padding: 10px 20px;
-  border: none;
-  background: none;
-  text-align: left;
-  cursor: pointer;
-  &:hover {
-    background-color: #f0f0f0;
+  a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+  }
+
+  a:hover {
+    background-color: #f1f1f1;
   }
 `;
 
-const TopBar = ({ user, onMenuClick }) => {
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-
-  const toggleDropdown = () => {
-    setDropdownOpen(!dropdownOpen);
-  };
-
+const TopBar = ({ user }) => {
   return (
     <TopBarContainer>
-      <MenuButton onClick={onMenuClick}>&#9776;</MenuButton>
-      <UserMenu>
-        <UserName onClick={toggleDropdown}>Hi, {user}</UserName>
-        {dropdownOpen && (
-          <DropdownMenu>
-            <DropdownItem onClick={toggleDropdown}>Profile</DropdownItem>
-            <DropdownItem onClick={toggleDropdown}>Logout</DropdownItem>
-          </DropdownMenu>
-        )}
-      </UserMenu>
+      <div>Dashboard</div>
+      <UserDropdown>
+        <div>Hi, {user}</div>
+        <DropdownContent className="dropdown-content">
+          <a href="/profile">Profile</a>
+          <a href="/logout">Logout</a>
+        </DropdownContent>
+      </UserDropdown>
     </TopBarContainer>
   );
 };

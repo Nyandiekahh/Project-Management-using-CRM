@@ -47,7 +47,7 @@ const DropdownContent = styled.div`
   padding-left: 20px;
 `;
 
-const Sidebar = ({ onCreateTaskClick }) => {
+const Sidebar = ({ onCreateTaskClick, onCreateUserClick }) => {
   const [openTasks, setOpenTasks] = useState(false);
 
   const handleClick = () => {
@@ -72,7 +72,10 @@ const Sidebar = ({ onCreateTaskClick }) => {
         <button onClick={onCreateTaskClick} style={{ background: 'none', border: 'none', color: 'white', textAlign: 'left', width: '100%', padding: '10px 20px', cursor: 'pointer' }}>
           Create Task
         </button>
-        <SidebarLink to="/assign-task">Assign Task</SidebarLink>
+        <button onClick={onCreateUserClick} style={{ background: 'none', border: 'none', color: 'white', textAlign: 'left', width: '100%', padding: '10px 20px', cursor: 'pointer' }}>
+          Create User
+        </button>
+        <SidebarLink to="/user-management">User Management</SidebarLink>
         <SidebarLink to="/faqs">FAQs</SidebarLink>
         <SidebarLink to="/complaints">Complaints</SidebarLink>
       </nav>
