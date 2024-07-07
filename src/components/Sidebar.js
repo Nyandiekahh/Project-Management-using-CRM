@@ -13,11 +13,6 @@ const SidebarContainer = styled.div`
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  transition: transform 0.3s ease-in-out;
-
-  @media (max-width: 768px) {
-    transform: translateX(${props => (props.isOpen ? '0' : '-100%')});
-  }
 `;
 
 const SidebarHeader = styled.div`
@@ -52,7 +47,7 @@ const DropdownContent = styled.div`
   padding-left: 20px;
 `;
 
-const Sidebar = ({ isOpen }) => {
+const Sidebar = ({ onCreateTaskClick }) => {
   const [openTasks, setOpenTasks] = useState(false);
 
   const handleClick = () => {
@@ -60,7 +55,7 @@ const Sidebar = ({ isOpen }) => {
   };
 
   return (
-    <SidebarContainer isOpen={isOpen}>
+    <SidebarContainer>
       <SidebarHeader>Admin Dashboard</SidebarHeader>
       <nav>
         <div>
@@ -74,7 +69,9 @@ const Sidebar = ({ isOpen }) => {
             <SidebarLink to="/urgent-tasks">Urgent Tasks</SidebarLink>
           </DropdownContent>
         </div>
-        <SidebarLink to="/create-task">Create Task</SidebarLink>
+        <button onClick={onCreateTaskClick} style={{ background: 'none', border: 'none', color: 'white', textAlign: 'left', width: '100%', padding: '10px 20px', cursor: 'pointer' }}>
+          Create Task
+        </button>
         <SidebarLink to="/assign-task">Assign Task</SidebarLink>
         <SidebarLink to="/faqs">FAQs</SidebarLink>
         <SidebarLink to="/complaints">Complaints</SidebarLink>

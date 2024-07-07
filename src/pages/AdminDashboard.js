@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Sidebar from '../components/Sidebar';
 import TopBar from '../components/TopBar';
+import TaskForm from '../components/TaskForm';
+import tasksData from '../tasks.json'; // Import the JSON file
 
 const Content = styled.div`
   margin-left: 250px;
@@ -84,23 +86,130 @@ const NoTasksMessage = styled.div`
   }
 `;
 
+const Button = styled.button`
+  padding: 10px 20px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 20px;
+
+  &:hover {
+    background-color: #2980b9;
+  }
+`;
+
+const EditButton = styled.button`
+  padding: 5px 10px;
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 5px;
+
+  &:hover {
+    background-color: #27ae60;
+  }
+`;
+
+const DeleteButton = styled.button`
+  padding: 5px 10px;
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #c0392b;
+  }
+`;
+
+// Helper function to generate unique 6-digit task ID
+const generateTaskId = (existingIds) => {
+  let newId;
+  do {
+    newId = Math.floor(100000 + Math.random() * 900000);
+  } while (existingIds.includes(newId));
+  return newId;
+};
+
 const AdminDashboard = () => {
-  // Mock data for tasks. Replace this with your actual task fetching logic.
-  const tasks = [
-    { id: 1, name: 'Circular on Priority Allowances for Other Public Officers', status: 'Pending' },
-    { id: 2, name: 'REVIEW OF RATES AND CLUSTER CLASSIFICATION FOR PURPOSES OF PAYMENT OF DAILY SUBSISTENCE ALLOWANCE (DSA) – LOCAL TRAVEL', status: 'Completed' },
-    { id: 3, name: 'Salary survey for 2021-2025', status: 'Not Done' },
+  const [tasks, setTasks] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
+  const officers = [
+    { id: 1, name: 'Officer 1' },
+    { id: 2, name: 'Officer 2' },
   ];
+
+  // Load tasks from local storage or JSON file on mount
+  useEffect(() => {
+    const storedTasks = JSON.parse(localStorage.getItem('tasks')) || tasksData;
+    setTasks(storedTasks);
+  }, []);
+
+  // Save tasks to local storage
+  const saveTasksToLocalStorage = (tasks) => {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+  };
+
+  const handleCreateTask = (newTask) => {
+    const taskId = generateTaskId(tasks.map(task => task.id));
+    const updatedTasks = [...tasks, { ...newTask, id: taskId }];
+    setTasks(updatedTasks);
+    saveTasksToLocalStorage(updatedTasks);
+    setShowForm(false);
+    setEditingTask(null);
+  };
+
+  const handleUpdateTask = (updatedTask) => {
+    const updatedTasks = tasks.map(task =>
+      task.id === updatedTask.id ? updatedTask : task
+    );
+    setTasks(updatedTasks);
+    saveTasksToLocalStorage(updatedTasks);
+    setShowForm(false);
+    setEditingTask(null);
+  };
+
+  const handleEditTask = (task) => {
+    setEditingTask(task);
+    setShowForm(true);
+  };
+
+  const handleDeleteTask = (taskId) => {
+    const updatedTasks = tasks.filter(task => task.id !== taskId);
+    setTasks(updatedTasks);
+    saveTasksToLocalStorage(updatedTasks);
+  };
+
+  const toggleForm = () => {
+    setShowForm(!showForm);
+    setEditingTask(null);
+  };
 
   return (
     <div>
-      <Sidebar />
+      <Sidebar onCreateTaskClick={toggleForm} />
       <TopBar user="Admin" />
       <Content>
         <WelcomeMessage>
           Welcome back, Admin
           <p>We're delighted to have you. Need help on system walk through? Navigate to virtual assistant on the side menu.</p>
         </WelcomeMessage>
+        <Button onClick={toggleForm}>
+          {showForm ? 'Hide Form' : 'Create New Task'}
+        </Button>
+        {showForm && (
+          <TaskForm
+            officers={officers}
+            onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
+            initialTask={editingTask}
+          />
+        )}
         <CurrentTasks>
           <h2>Current Assigned Tasks</h2>
           <TaskList>
@@ -111,6 +220,8 @@ const AdminDashboard = () => {
                     <TaskTableHeader>TASK ID</TaskTableHeader>
                     <TaskTableHeader>TASK NAME</TaskTableHeader>
                     <TaskTableHeader>TASK STATUS</TaskTableHeader>
+                    <TaskTableHeader>DEADLINE</TaskTableHeader>
+                    <TaskTableHeader>ACTIONS</TaskTableHeader>
                   </tr>
                 </thead>
                 <tbody>
@@ -119,6 +230,11 @@ const AdminDashboard = () => {
                       <TaskCell>{task.id}</TaskCell>
                       <TaskCell>{task.name}</TaskCell>
                       <StatusCell status={task.status}>{task.status}</StatusCell>
+                      <TaskCell>{task.deadline}</TaskCell>
+                      <TaskCell>
+                        <EditButton onClick={() => handleEditTask(task)}>Edit</EditButton>
+                        <DeleteButton onClick={() => handleDeleteTask(task.id)}>Delete</DeleteButton>
+                      </TaskCell>
                     </TaskRow>
                   ))}
                 </tbody>
