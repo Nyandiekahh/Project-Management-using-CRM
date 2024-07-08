@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
+import { FaTachometerAlt, FaTasks, FaUser, FaQuestionCircle, FaFileAlt, FaClipboardList, FaBars } from 'react-icons/fa';
 
 const SidebarContainer = styled.div`
-  width: 250px;
+  width: ${props => (props.isOpen ? '250px' : '60px')};
   height: 100vh;
   background-color: #2c3e50;
   color: white;
@@ -13,71 +14,76 @@ const SidebarContainer = styled.div`
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  transition: width 0.3s;
 `;
 
 const SidebarHeader = styled.div`
   padding: 15px;
   font-size: 1.2em;
   background-color: #1a252f;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
 `;
 
 const SidebarLink = styled(Link)`
   text-decoration: none;
   color: white;
-  display: block;
-  padding: 10px 20px;
-`;
-
-const DropdownButton = styled.button`
-  width: 100%;
   display: flex;
-  justify-content: space-between;
+  align-items: center;
   padding: 10px 20px;
-  background: #34495e;
-  border: none;
-  color: white;
-  cursor: pointer;
-  &:focus {
-    outline: none;
+  &:hover {
+    background-color: #34495e;
   }
 `;
 
-const DropdownContent = styled.div`
-  display: ${props => (props.open ? 'block' : 'none')};
-  padding-left: 20px;
+const SidebarIcon = styled.div`
+  width: 30px;
+  display: flex;
+  justify-content: center;
 `;
 
-const Sidebar = ({ onCreateTaskClick, onCreateUserClick }) => {
-  const [openTasks, setOpenTasks] = useState(false);
+const SidebarText = styled.span`
+  display: ${props => (props.isOpen ? 'inline' : 'none')};
+  margin-left: 10px;
+  transition: display 0.3s;
+`;
 
-  const handleClick = () => {
-    setOpenTasks(!openTasks);
-  };
-
+const Sidebar = ({ isOpen, toggleSidebar }) => {
   return (
-    <SidebarContainer>
-      <SidebarHeader>Admin Dashboard</SidebarHeader>
+    <SidebarContainer isOpen={isOpen}>
+      <SidebarHeader onClick={toggleSidebar}>
+        <SidebarIcon>
+          <FaBars />
+        </SidebarIcon>
+        <SidebarText isOpen={isOpen}>Admin Dashboard</SidebarText>
+      </SidebarHeader>
       <nav>
-        <div>
-          <DropdownButton onClick={handleClick}>
-            <span>Tasks</span>
-            <span>{openTasks ? '-' : '+'}</span>
-          </DropdownButton>
-          <DropdownContent open={openTasks}>
-            <SidebarLink to="/pending-tasks">Pending Tasks</SidebarLink>
-            <SidebarLink to="/assigned-tasks">Assigned Tasks</SidebarLink>
-            <SidebarLink to="/urgent-tasks">Urgent Tasks</SidebarLink>
-          </DropdownContent>
-        </div>
-        <button onClick={onCreateTaskClick} style={{ background: 'none', border: 'none', color: 'white', textAlign: 'left', width: '100%', padding: '10px 20px', cursor: 'pointer' }}>
-          Create Task
-        </button>
-        <button onClick={onCreateUserClick} style={{ background: 'none', border: 'none', color: 'white', textAlign: 'left', width: '100%', padding: '10px 20px', cursor: 'pointer' }}>
-          Create User
-        </button>
-        <SidebarLink to="/user-management">User Management</SidebarLink>
-        <SidebarLink to="/faqs">FAQs</SidebarLink>
-        <SidebarLink to="/complaints">Complaints</SidebarLink>
+        <SidebarLink to="/admin-dashboard">
+          <SidebarIcon><FaTachometerAlt /></SidebarIcon>
+          <SidebarText isOpen={isOpen}>Dashboard</SidebarText>
+        </SidebarLink>
+        <SidebarLink to="/pending-tasks">
+          <SidebarIcon><FaTasks /></SidebarIcon>
+          <SidebarText isOpen={isOpen}>Tasks</SidebarText>
+        </SidebarLink>
+        <SidebarLink to="/user-management">
+          <SidebarIcon><FaUser /></SidebarIcon>
+          <SidebarText isOpen={isOpen}>User Management</SidebarText>
+        </SidebarLink>
+        <SidebarLink to="/faqs">
+          <SidebarIcon><FaQuestionCircle /></SidebarIcon>
+          <SidebarText isOpen={isOpen}>FAQs</SidebarText>
+        </SidebarLink>
+        <SidebarLink to="/complaints">
+          <SidebarIcon><FaClipboardList /></SidebarIcon>
+          <SidebarText isOpen={isOpen}>Complaints</SidebarText>
+        </SidebarLink>
+        <SidebarLink to="/reports">
+          <SidebarIcon><FaFileAlt /></SidebarIcon>
+          <SidebarText isOpen={isOpen}>Reports</SidebarText>
+        </SidebarLink>
       </nav>
     </SidebarContainer>
   );

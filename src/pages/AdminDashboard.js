@@ -7,16 +7,16 @@ import UserForm from '../components/UserForm';
 import tasksData from '../tasks.json'; // Import the JSON file
 import usersData from '../users.json'; // Import the JSON file
 
+const DashboardContainer = styled.div`
+  display: flex;
+  height: 100vh;
+`;
+
 const Content = styled.div`
-  margin-left: 250px;
-  margin-top: 60px;
+  flex: 1;
   padding: 20px;
   background-color: #f1f1f1;
-  height: calc(100vh - 60px);
-
-  @media (max-width: 768px) {
-    margin-left: 0;
-  }
+  margin-left: 250px;
 `;
 
 const WelcomeMessage = styled.div`
@@ -129,7 +129,6 @@ const DeleteButton = styled.button`
   }
 `;
 
-// Helper function to generate unique 6-digit task ID
 const generateTaskId = (existingIds) => {
   let newId;
   do {
@@ -151,7 +150,6 @@ const AdminDashboard = () => {
     { id: 2, name: 'Officer 2' },
   ];
 
-  // Load tasks from local storage or JSON file on mount
   useEffect(() => {
     const storedTasks = JSON.parse(localStorage.getItem('tasks')) || tasksData;
     setTasks(storedTasks);
@@ -159,12 +157,10 @@ const AdminDashboard = () => {
     setUsers(storedUsers);
   }, []);
 
-  // Save tasks to local storage
   const saveTasksToLocalStorage = (tasks) => {
     localStorage.setItem('tasks', JSON.stringify(tasks));
   };
 
-  // Save users to local storage
   const saveUsersToLocalStorage = (users) => {
     localStorage.setItem('users', JSON.stringify(users));
   };
@@ -200,7 +196,7 @@ const AdminDashboard = () => {
   };
 
   const handleCreateUser = (newUser) => {
-    const userId = generateTaskId(users.map(user => user.id)); // Reuse generateTaskId function for user IDs
+    const userId = generateTaskId(users.map(user => user.id));
     const updatedUsers = [...users, { ...newUser, id: userId }];
     setUsers(updatedUsers);
     saveUsersToLocalStorage(updatedUsers);
@@ -229,72 +225,74 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div>
+    <DashboardContainer>
       <Sidebar onCreateTaskClick={toggleTaskForm} onCreateUserClick={toggleUserForm} />
-      <TopBar user="Admin" />
-      <Content>
-        <WelcomeMessage>
-          Welcome back, Admin
-          <p>We're delighted to have you. Need help on system walk through? Navigate to virtual assistant on the side menu.</p>
-        </WelcomeMessage>
-        <Button onClick={toggleTaskForm}>
-          {showTaskForm ? 'Hide Task Form' : 'Create New Task'}
-        </Button>
-        <Button onClick={toggleUserForm}>
-          {showUserForm ? 'Hide User Form' : 'Create New User'}
-        </Button>
-        {showTaskForm && (
-          <TaskForm
-            officers={officers}
-            onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
-            initialTask={editingTask}
-          />
-        )}
-        {showUserForm && (
-          <UserForm
-            onSubmit={editingUser ? handleUpdateUser : handleCreateUser}
-            initialUser={editingUser || {}} // Ensure initialUser is not null
-          />
-        )}
-        <CurrentTasks>
-          <h2>Current Assigned Tasks</h2>
-          <TaskList>
-            {tasks.length > 0 ? (
-              <TaskTable>
-                <thead>
-                  <tr>
-                    <TaskTableHeader>TASK ID</TaskTableHeader>
-                    <TaskTableHeader>TASK NAME</TaskTableHeader>
-                    <TaskTableHeader>TASK STATUS</TaskTableHeader>
-                    <TaskTableHeader>DEADLINE</TaskTableHeader>
-                    <TaskTableHeader>ACTIONS</TaskTableHeader>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tasks.map(task => (
-                    <TaskRow key={task.id}>
-                      <TaskCell>{task.id}</TaskCell>
-                      <TaskCell>{task.name}</TaskCell>
-                      <StatusCell status={task.status}>{task.status}</StatusCell>
-                      <TaskCell>{task.deadline}</TaskCell>
-                      <TaskCell>
-                        <EditButton onClick={() => handleEditTask(task)}>Edit</EditButton>
-                        <DeleteButton onClick={() => handleDeleteTask(task.id)}>Delete</DeleteButton>
-                      </TaskCell>
-                    </TaskRow>
-                  ))}
-                </tbody>
-              </TaskTable>
-            ) : (
-              <NoTasksMessage>
-                Hooray! No pending task.
-                <img src="/path-to-your-image.png" alt="No tasks" />
-              </NoTasksMessage>
-            )}
-          </TaskList>
-        </CurrentTasks>
-      </Content>
-    </div>
+      <div style={{ flex: 1 }}>
+        <TopBar user="Admin" />
+        <Content>
+          <WelcomeMessage>
+            Welcome back, Admin
+            <p>We're delighted to have you. Need help on system walk through? Navigate to virtual assistant on the side menu.</p>
+          </WelcomeMessage>
+          <Button onClick={toggleTaskForm}>
+            {showTaskForm ? 'Hide Task Form' : 'Create New Task'}
+          </Button>
+          <Button onClick={toggleUserForm}>
+            {showUserForm ? 'Hide User Form' : 'Create New User'}
+          </Button>
+          {showTaskForm && (
+            <TaskForm
+              officers={officers}
+              onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
+              initialTask={editingTask}
+            />
+          )}
+          {showUserForm && (
+            <UserForm
+              onSubmit={editingUser ? handleUpdateUser : handleCreateUser}
+              initialUser={editingUser || {}}
+            />
+          )}
+          <CurrentTasks>
+            <h2>Current Assigned Tasks</h2>
+            <TaskList>
+              {tasks.length > 0 ? (
+                <TaskTable>
+                  <thead>
+                    <tr>
+                      <TaskTableHeader>TASK ID</TaskTableHeader>
+                      <TaskTableHeader>TASK NAME</TaskTableHeader>
+                      <TaskTableHeader>TASK STATUS</TaskTableHeader>
+                      <TaskTableHeader>DEADLINE</TaskTableHeader>
+                      <TaskTableHeader>ACTIONS</TaskTableHeader>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tasks.map(task => (
+                      <TaskRow key={task.id}>
+                        <TaskCell>{task.id}</TaskCell>
+                        <TaskCell>{task.name}</TaskCell>
+                        <StatusCell status={task.status}>{task.status}</StatusCell>
+                        <TaskCell>{task.deadline}</TaskCell>
+                        <TaskCell>
+                          <EditButton onClick={() => handleEditTask(task)}>Edit</EditButton>
+                          <DeleteButton onClick={() => handleDeleteTask(task.id)}>Delete</DeleteButton>
+                        </TaskCell>
+                      </TaskRow>
+                    ))}
+                  </tbody>
+                </TaskTable>
+              ) : (
+                <NoTasksMessage>
+                  Hooray! No pending task.
+                  <img src="/path-to-your-image.png" alt="No tasks" />
+                </NoTasksMessage>
+              )}
+            </TaskList>
+          </CurrentTasks>
+        </Content>
+      </div>
+    </DashboardContainer>
   );
 };
 

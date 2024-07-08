@@ -1,8 +1,9 @@
 import React from 'react';
 import styled from 'styled-components';
+import { FaBars } from 'react-icons/fa';
 
 const TopBarContainer = styled.div`
-  width: 100%;
+  width: calc(100% - ${props => (props.isSidebarOpen ? '250px' : '60px')});
   height: 60px;
   background-color: #34495e;
   color: white;
@@ -12,12 +13,23 @@ const TopBarContainer = styled.div`
   padding: 0 20px;
   position: fixed;
   top: 0;
-  left: 250px;
+  left: ${props => (props.isSidebarOpen ? '250px' : '60px')};
+  transition: left 0.3s, width 0.3s;
   z-index: 1000;
 
   @media (max-width: 768px) {
     left: 0;
+    width: 100%;
   }
+`;
+
+const ToggleButton = styled.button`
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  cursor: pointer;
+  color: white;
+  margin-right: 20px;
 `;
 
 const UserDropdown = styled.div`
@@ -51,9 +63,12 @@ const DropdownContent = styled.div`
   }
 `;
 
-const TopBar = ({ user }) => {
+const TopBar = ({ user, toggleSidebar, isSidebarOpen }) => {
   return (
-    <TopBarContainer>
+    <TopBarContainer isSidebarOpen={isSidebarOpen}>
+      <ToggleButton onClick={toggleSidebar}>
+        <FaBars />
+      </ToggleButton>
       <div>Dashboard</div>
       <UserDropdown>
         <div>Hi, {user}</div>
