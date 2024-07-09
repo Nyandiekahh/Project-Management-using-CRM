@@ -98,18 +98,6 @@ const TaskForm = ({ officers, onSubmit, initialTask }) => {
       file,
     };
 
-    const existingTasks = JSON.parse(localStorage.getItem('tasks')) || [];
-
-    if (initialTask) {
-      const updatedTasks = existingTasks.map(task =>
-        task.id === initialTask.id ? newTask : task
-      );
-      localStorage.setItem('tasks', JSON.stringify(updatedTasks));
-    } else {
-      existingTasks.push(newTask);
-      localStorage.setItem('tasks', JSON.stringify(existingTasks));
-    }
-
     onSubmit(newTask);
     setTaskName('');
     setDescription('');

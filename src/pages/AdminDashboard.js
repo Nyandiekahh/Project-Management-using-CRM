@@ -2,9 +2,6 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Sidebar from '../components/Sidebar';
 import TaskForm from '../components/TaskForm';
-import UserForm from '../components/UserForm';
-import tasksData from '../tasks.json'; // Import the JSON file
-import usersData from '../users.json'; // Import the JSON file
 
 const DashboardContainer = styled.div`
   display: flex;
@@ -81,10 +78,14 @@ const NoTasksMessage = styled.div`
   text-align: center;
   margin-top: 20px;
   font-size: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 
   img {
-    margin-top: 10px;
-    max-width: 150px;
+    margin-top: 20px;
+    width: 80%;
+    max-width: 400px;
   }
 `;
 
@@ -139,52 +140,61 @@ const generateTaskId = (existingIds) => {
 
 const AdminDashboard = () => {
   const [tasks, setTasks] = useState([]);
-  const [users, setUsers] = useState([]);
   const [showTaskForm, setShowTaskForm] = useState(false);
-  const [showUserForm, setShowUserForm] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
-  const [editingUser, setEditingUser] = useState(null);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
 
   const toggleSidebar = () => {
     setSidebarOpen(!isSidebarOpen);
   };
 
-  const officers = [
-    { id: 1, name: 'Officer 1' },
-    { id: 2, name: 'Officer 2' },
-  ];
-
   useEffect(() => {
-    const storedTasks = JSON.parse(localStorage.getItem('tasks')) || tasksData;
-    setTasks(storedTasks);
-    const storedUsers = JSON.parse(localStorage.getItem('users')) || usersData;
-    setUsers(storedUsers);
+    fetch('http://localhost:5000/tasks')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok ' + response.statusText);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Fetched tasks:', data); // Debugging line
+        setTasks(data);
+      })
+      .catch(error => console.error('Error fetching tasks:', error));
   }, []);
-
-  const saveTasksToLocalStorage = (tasks) => {
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-  };
-
-  const saveUsersToLocalStorage = (users) => {
-    localStorage.setItem('users', JSON.stringify(users));
-  };
 
   const handleCreateTask = (newTask) => {
     const taskId = generateTaskId(tasks.map(task => task.id));
-    const updatedTasks = [...tasks, { ...newTask, id: taskId }];
-    setTasks(updatedTasks);
-    saveTasksToLocalStorage(updatedTasks);
+    const updatedTask = { ...newTask, id: taskId };
+    fetch('http://localhost:5000/tasks', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(updatedTask)
+    })
+      .then(response => response.json())
+      .then(data => {
+        setTasks(prevTasks => [...prevTasks, data]);
+      })
+      .catch(error => console.error('Error creating task:', error));
     setShowTaskForm(false);
     setEditingTask(null);
   };
 
   const handleUpdateTask = (updatedTask) => {
-    const updatedTasks = tasks.map(task =>
-      task.id === updatedTask.id ? updatedTask : task
-    );
-    setTasks(updatedTasks);
-    saveTasksToLocalStorage(updatedTasks);
+    fetch(`http://localhost:5000/tasks/${updatedTask.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(updatedTask)
+    })
+      .then(response => response.json())
+      .then(data => {
+        setTasks(prevTasks => prevTasks.map(task => (task.id === data.id ? data : task)));
+      })
+      .catch(error => console.error('Error updating task:', error));
     setShowTaskForm(false);
     setEditingTask(null);
   };
@@ -195,38 +205,19 @@ const AdminDashboard = () => {
   };
 
   const handleDeleteTask = (taskId) => {
-    const updatedTasks = tasks.filter(task => task.id !== taskId);
-    setTasks(updatedTasks);
-    saveTasksToLocalStorage(updatedTasks);
-  };
-
-  const handleCreateUser = (newUser) => {
-    const userId = generateTaskId(users.map(user => user.id));
-    const updatedUsers = [...users, { ...newUser, id: userId }];
-    setUsers(updatedUsers);
-    saveUsersToLocalStorage(updatedUsers);
-    setShowUserForm(false);
-    setEditingUser(null);
-  };
-
-  const handleUpdateUser = (updatedUser) => {
-    const updatedUsers = users.map(user =>
-      user.id === updatedUser.id ? updatedUser : user
-    );
-    setUsers(updatedUsers);
-    saveUsersToLocalStorage(updatedUsers);
-    setShowUserForm(false);
-    setEditingUser(null);
+    fetch(`http://localhost:5000/tasks/${taskId}`, {
+      method: 'DELETE'
+    })
+      .then(response => response.json())
+      .then(() => {
+        setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+      })
+      .catch(error => console.error('Error deleting task:', error));
   };
 
   const toggleTaskForm = () => {
     setShowTaskForm(!showTaskForm);
     setEditingTask(null);
-  };
-
-  const toggleUserForm = () => {
-    setShowUserForm(!showUserForm);
-    setEditingUser(null);
   };
 
   return (
@@ -240,20 +231,14 @@ const AdminDashboard = () => {
         <Button onClick={toggleTaskForm}>
           {showTaskForm ? 'Hide Task Form' : 'Create New Task'}
         </Button>
-        <Button onClick={toggleUserForm}>
-          {showUserForm ? 'Hide User Form' : 'Create New User'}
-        </Button>
         {showTaskForm && (
           <TaskForm
-            officers={officers}
+            officers={[
+              { id: 1, name: 'Officer 1' },
+              { id: 2, name: 'Officer 2' },
+            ]}
             onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
             initialTask={editingTask}
-          />
-        )}
-        {showUserForm && (
-          <UserForm
-            onSubmit={editingUser ? handleUpdateUser : handleCreateUser}
-            initialUser={editingUser || {}}
           />
         )}
         <CurrentTasks>
@@ -288,7 +273,7 @@ const AdminDashboard = () => {
             ) : (
               <NoTasksMessage>
                 Hooray! No pending task.
-                <img src="/path-to-your-image.png" alt="No tasks" />
+                <img src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExbTFiNzVicXh1dHp2aWd3YnE4amZjcnIzdWl2NnBmY3h4engyOTN6ZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/26ufnwz3wDUli7GU0/giphy.webp" alt="No tasks" />
               </NoTasksMessage>
             )}
           </TaskList>
