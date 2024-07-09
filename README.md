@@ -33,93 +33,130 @@ This project is a comprehensive Project Management System designed for administr
 - **Styled-Components**: For component-level styling.
 - **React Router**: For routing and navigation.
 - **React Icons**: For adding icons to the UI.
+- **Express**: Backend framework for Node.js.
+- **Nodemon**: Utility for automatically restarting the node application when file changes are detected.
 
 ## Installation
 
 Follow these steps to set up the project locally:
 
-1. **Clone the repository**:
+### Backend Setup
+
+1. **Navigate to the backend directory**:
     ```sh
-    git clone https://github.com/yourusername/project-management-system.git - NO CLONING
+    cd backend
     ```
 
-2. **Navigate to the project directory**:
+2. **Install dependencies**:
     ```sh
-    cd project-management-system
+    npm install
     ```
 
-3. **Install dependencies**:
+### Frontend Setup
+
+1. **Navigate to the frontend directory**:
+    ```sh
+    cd ../
+    ```
+
+2. **Install dependencies**:
     ```sh
     npm install
     ```
 
 ## Usage
 
-To run the project locally, use the following command:
+### Running the Backend
+
+To start the backend server, use the following command:
 
 ```sh
+cd backend
+npm run dev
+This will start the backend server with Nodemon on http://localhost:5000.
+
+Running the Frontend
+To start the frontend development server, use the following command:
+
+sh
+Copy code
+cd ../
 npm start
-```
+This will start the frontend development server and open the project in your default web browser. You can access the project at http://localhost:3000.
 
-This will start the development server and open the project in your default web browser. You can access the project at `http://localhost:3000`.
-
-## File Structure
-
-```
-project-management-system/
+File Structure
+lua
+Copy code
+project-management-using-crm/
+├── backend/
+│   ├── node_modules/
+│   ├── tasks.json
+│   ├── users.json
+│   ├── server.js
+│   ├── package-lock.json
+│   ├── package.json
+├── node_modules/
 ├── public/
 │   ├── index.html
 │   └── ...
 ├── src/
 │   ├── components/
-│   │   ├── Sidebar.js
-│   │   ├── TopBar.js
-│   │   ├── TaskForm.js
-│   │   ├── UserForm.js
+│   │   ├── AdminLogin.js
+│   │   ├── ComplaintDetails.js
 │   │   ├── ComplaintForm.js
 │   │   ├── ComplaintList.js
-│   │   └── ComplaintDetails.js
+│   │   ├── OfficerLogin.js
+│   │   ├── ProtectedRoute.js
+│   │   ├── Sidebar.js
+│   │   ├── Signup.js
+│   │   ├── TaskForm.js
+│   │   ├── TaskList.js
+│   │   ├── UserForm.js
 │   ├── pages/
 │   │   ├── AdminDashboard.js
-│   │   ├── UserManagement.js
 │   │   ├── ComplaintsPage.js
-│   │   └── ...
+│   │   ├── OfficerDashboard.js
+│   │   ├── TaskManagementPage.js
+│   │   ├── UserManagement.js
+│   ├── App.css
 │   ├── App.js
+│   ├── App.test.js
+│   ├── index.css
 │   ├── index.js
-│   └── ...
-├── tasks.json
-├── users.json
-├── README.md
+│   ├── logo.svg
+│   ├── reportWebVitals.js
+│   ├── setupTests.js
+│   ├── tasks.json
+│   ├── users.json
+├── .gitignore
+├── image.png
+├── package-lock.json
 ├── package.json
-└── ...
-```
-
-## Contributing
-
+├── postcss.config.js
+├── README.md
+├── tailwind.config.js
+Contributing
 We welcome contributions to enhance the project. To contribute, follow these steps:
 
-1. **Fork the repository**.
-2. **Create a new branch**:
-    ```sh
-    git checkout -b feature-branch
-    ```
-3. **Make your changes and commit them**:
-    ```sh
-    git commit -m "Add new feature"
-    ```
-4. **Push to the branch**:
-    ```sh
-    git push origin feature-branch
-    ```
-5. **Create a pull request**.
+Fork the repository.
+Create a new branch:
+sh
+Copy code
+git checkout -b feature-branch
+Make your changes and commit them:
+sh
+Copy code
+git commit -m "Add new feature"
+Push to the branch:
+sh
+Copy code
+git push origin feature-branch
+Create a pull request.
+License
+This project is licensed under the MIT License. See the LICENSE file for more details.
 
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
-
-## Contact
-
+Contact
 For any inquiries or feedback, feel free to contact us:
 
-- **Email**: your.email@example.com  - HIDDEN
-- **GitHub**: [yourusername](https://github.com/yourusername)  - HIDDEN
+Email: your.email@example.com - HIDDEN
+GitHub: yourusername - HIDDEN
