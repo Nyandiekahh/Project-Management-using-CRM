@@ -1,20 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Sidebar from '../components/Sidebar';
-import TopBar from '../components/TopBar';
 import UserForm from '../components/UserForm';
 import usersData from '../users.json'; // Import the JSON file
 
 const Content = styled.div`
-  margin-left: 250px;
-  margin-top: 60px;
+  flex: 1;
   padding: 20px;
   background-color: #f1f1f1;
-  height: calc(100vh - 60px);
-
-  @media (max-width: 768px) {
-    margin-left: 0;
-  }
+  margin-left: ${props => (props.isSidebarOpen ? '250px' : '60px')};
+  transition: margin-left 0.3s;
 `;
 
 const WelcomeMessage = styled.div`
@@ -110,14 +105,17 @@ const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
 
-  // Load users from local storage or JSON file on mount
+  const toggleSidebar = () => {
+    setSidebarOpen(!isSidebarOpen);
+  };
+
   useEffect(() => {
     const storedUsers = JSON.parse(localStorage.getItem('users')) || usersData;
     setUsers(storedUsers);
   }, []);
 
-  // Save users to local storage
   const saveUsersToLocalStorage = (users) => {
     localStorage.setItem('users', JSON.stringify(users));
   };
@@ -158,9 +156,8 @@ const UserManagement = () => {
 
   return (
     <div>
-      <Sidebar />
-      <TopBar user="Admin" />
-      <Content>
+      <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+      <Content isSidebarOpen={isSidebarOpen}>
         <WelcomeMessage>
           User Management
           <p>Manage user accounts and permissions.</p>

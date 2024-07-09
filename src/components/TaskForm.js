@@ -86,7 +86,8 @@ const TaskForm = ({ officers, onSubmit, initialTask }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit({
+
+    const newTask = {
       id: initialTask ? initialTask.id : Date.now(),
       name: taskName,
       description,
@@ -95,7 +96,21 @@ const TaskForm = ({ officers, onSubmit, initialTask }) => {
       status,
       link,
       file,
-    });
+    };
+
+    const existingTasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+    if (initialTask) {
+      const updatedTasks = existingTasks.map(task =>
+        task.id === initialTask.id ? newTask : task
+      );
+      localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+    } else {
+      existingTasks.push(newTask);
+      localStorage.setItem('tasks', JSON.stringify(existingTasks));
+    }
+
+    onSubmit(newTask);
     setTaskName('');
     setDescription('');
     setDeadline('');

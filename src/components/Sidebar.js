@@ -64,7 +64,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           <SidebarIcon><FaTachometerAlt /></SidebarIcon>
           <SidebarText isOpen={isOpen}>Dashboard</SidebarText>
         </SidebarLink>
-        <SidebarLink to="/pending-tasks">
+        <SidebarLink to="/tasks">
           <SidebarIcon><FaTasks /></SidebarIcon>
           <SidebarText isOpen={isOpen}>Tasks</SidebarText>
         </SidebarLink>

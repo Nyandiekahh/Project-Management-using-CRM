@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Sidebar from '../components/Sidebar';
-import TopBar from '../components/TopBar';
 import TaskForm from '../components/TaskForm';
 import UserForm from '../components/UserForm';
 import tasksData from '../tasks.json'; // Import the JSON file
@@ -16,7 +15,8 @@ const Content = styled.div`
   flex: 1;
   padding: 20px;
   background-color: #f1f1f1;
-  margin-left: 250px;
+  margin-left: ${props => (props.isSidebarOpen ? '250px' : '60px')};
+  transition: margin-left 0.3s;
 `;
 
 const WelcomeMessage = styled.div`
@@ -144,6 +144,11 @@ const AdminDashboard = () => {
   const [showUserForm, setShowUserForm] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!isSidebarOpen);
+  };
 
   const officers = [
     { id: 1, name: 'Officer 1' },
@@ -226,72 +231,69 @@ const AdminDashboard = () => {
 
   return (
     <DashboardContainer>
-      <Sidebar onCreateTaskClick={toggleTaskForm} onCreateUserClick={toggleUserForm} />
-      <div style={{ flex: 1 }}>
-        <TopBar user="Admin" />
-        <Content>
-          <WelcomeMessage>
-            Welcome back, Admin
-            <p>We're delighted to have you. Need help on system walk through? Navigate to virtual assistant on the side menu.</p>
-          </WelcomeMessage>
-          <Button onClick={toggleTaskForm}>
-            {showTaskForm ? 'Hide Task Form' : 'Create New Task'}
-          </Button>
-          <Button onClick={toggleUserForm}>
-            {showUserForm ? 'Hide User Form' : 'Create New User'}
-          </Button>
-          {showTaskForm && (
-            <TaskForm
-              officers={officers}
-              onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
-              initialTask={editingTask}
-            />
-          )}
-          {showUserForm && (
-            <UserForm
-              onSubmit={editingUser ? handleUpdateUser : handleCreateUser}
-              initialUser={editingUser || {}}
-            />
-          )}
-          <CurrentTasks>
-            <h2>Current Assigned Tasks</h2>
-            <TaskList>
-              {tasks.length > 0 ? (
-                <TaskTable>
-                  <thead>
-                    <tr>
-                      <TaskTableHeader>TASK ID</TaskTableHeader>
-                      <TaskTableHeader>TASK NAME</TaskTableHeader>
-                      <TaskTableHeader>TASK STATUS</TaskTableHeader>
-                      <TaskTableHeader>DEADLINE</TaskTableHeader>
-                      <TaskTableHeader>ACTIONS</TaskTableHeader>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tasks.map(task => (
-                      <TaskRow key={task.id}>
-                        <TaskCell>{task.id}</TaskCell>
-                        <TaskCell>{task.name}</TaskCell>
-                        <StatusCell status={task.status}>{task.status}</StatusCell>
-                        <TaskCell>{task.deadline}</TaskCell>
-                        <TaskCell>
-                          <EditButton onClick={() => handleEditTask(task)}>Edit</EditButton>
-                          <DeleteButton onClick={() => handleDeleteTask(task.id)}>Delete</DeleteButton>
-                        </TaskCell>
-                      </TaskRow>
-                    ))}
-                  </tbody>
-                </TaskTable>
-              ) : (
-                <NoTasksMessage>
-                  Hooray! No pending task.
-                  <img src="/path-to-your-image.png" alt="No tasks" />
-                </NoTasksMessage>
-              )}
-            </TaskList>
-          </CurrentTasks>
-        </Content>
-      </div>
+      <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+      <Content isSidebarOpen={isSidebarOpen}>
+        <WelcomeMessage>
+          Welcome back, Admin
+          <p>We're delighted to have you. Need help on system walk through? Navigate to virtual assistant on the side menu.</p>
+        </WelcomeMessage>
+        <Button onClick={toggleTaskForm}>
+          {showTaskForm ? 'Hide Task Form' : 'Create New Task'}
+        </Button>
+        <Button onClick={toggleUserForm}>
+          {showUserForm ? 'Hide User Form' : 'Create New User'}
+        </Button>
+        {showTaskForm && (
+          <TaskForm
+            officers={officers}
+            onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
+            initialTask={editingTask}
+          />
+        )}
+        {showUserForm && (
+          <UserForm
+            onSubmit={editingUser ? handleUpdateUser : handleCreateUser}
+            initialUser={editingUser || {}}
+          />
+        )}
+        <CurrentTasks>
+          <h2>Current Assigned Tasks</h2>
+          <TaskList>
+            {tasks.length > 0 ? (
+              <TaskTable>
+                <thead>
+                  <tr>
+                    <TaskTableHeader>TASK ID</TaskTableHeader>
+                    <TaskTableHeader>TASK NAME</TaskTableHeader>
+                    <TaskTableHeader>TASK STATUS</TaskTableHeader>
+                    <TaskTableHeader>DEADLINE</TaskTableHeader>
+                    <TaskTableHeader>ACTIONS</TaskTableHeader>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tasks.map(task => (
+                    <TaskRow key={task.id}>
+                      <TaskCell>{task.id}</TaskCell>
+                      <TaskCell>{task.name}</TaskCell>
+                      <StatusCell status={task.status}>{task.status}</StatusCell>
+                      <TaskCell>{task.deadline}</TaskCell>
+                      <TaskCell>
+                        <EditButton onClick={() => handleEditTask(task)}>Edit</EditButton>
+                        <DeleteButton onClick={() => handleDeleteTask(task.id)}>Delete</DeleteButton>
+                      </TaskCell>
+                    </TaskRow>
+                  ))}
+                </tbody>
+              </TaskTable>
+            ) : (
+              <NoTasksMessage>
+                Hooray! No pending task.
+                <img src="/path-to-your-image.png" alt="No tasks" />
+              </NoTasksMessage>
+            )}
+          </TaskList>
+        </CurrentTasks>
+      </Content>
     </DashboardContainer>
   );
 };
