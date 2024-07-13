@@ -83,6 +83,7 @@ const TaskForm = ({ officers, onSubmit, initialTask }) => {
     deadline: '',
     assignedOfficer: officers[0].name,
     status: 'Not Done',
+    document: null
   });
 
   useEffect(() => {
@@ -92,10 +93,10 @@ const TaskForm = ({ officers, onSubmit, initialTask }) => {
   }, [initialTask]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, files } = e.target;
     setTask((prevTask) => ({
       ...prevTask,
-      [name]: value,
+      [name]: files ? files[0] : value,
     }));
   };
 
@@ -160,18 +161,13 @@ const TaskForm = ({ officers, onSubmit, initialTask }) => {
           </Select>
         </FormField>
         <FormField>
-          <Label htmlFor="status">Status</Label>
-          <Select
-            id="status"
-            name="status"
-            value={task.status}
+          <Label htmlFor="document">Upload Document</Label>
+          <Input
+            id="document"
+            name="document"
+            type="file"
             onChange={handleChange}
-            required
-          >
-            <option value="Not Done">Not Done</option>
-            <option value="Pending">Pending</option>
-            <option value="Completed">Completed</option>
-          </Select>
+          />
         </FormField>
         <Button type="submit">Save Task</Button>
       </form>

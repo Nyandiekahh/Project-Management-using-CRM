@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import Sidebar from '../components/Sidebar';
 import TaskForm from '../components/TaskForm';
@@ -50,6 +51,7 @@ const TaskRow = styled.tr`
   &:nth-child(even) {
     background-color: #f2f2f2;
   }
+  cursor: pointer; /* Make the row clickable */
 `;
 
 const TaskCell = styled.td`
@@ -67,6 +69,8 @@ const StatusCell = styled(TaskCell)`
         return '#f39c12'; // Orange for Pending
       case 'Completed':
         return '#2ecc71'; // Green for Completed
+      case 'Assigned':
+        return '#3498db'; // Blue for Assigned
       default:
         return 'transparent';
     }
@@ -130,19 +134,12 @@ const DeleteButton = styled.button`
   }
 `;
 
-const generateTaskId = (existingIds) => {
-  let newId;
-  do {
-    newId = Math.floor(100000 + Math.random() * 900000);
-  } while (existingIds.includes(newId));
-  return newId;
-};
-
 const AdminDashboard = () => {
   const [tasks, setTasks] = useState([]);
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const navigate = useNavigate();
 
   const toggleSidebar = () => {
     setSidebarOpen(!isSidebarOpen);
@@ -164,37 +161,24 @@ const AdminDashboard = () => {
   }, []);
 
   const handleCreateTask = (newTask) => {
-    const taskId = generateTaskId(tasks.map(task => task.id));
-    const updatedTask = { ...newTask, id: taskId };
+    const formData = new FormData();
+    formData.append('name', newTask.name);
+    formData.append('description', newTask.description);
+    formData.append('deadline', newTask.deadline);
+    formData.append('assignedOfficer', newTask.assignedOfficer);
+    if (newTask.document) {
+      formData.append('document', newTask.document);
+    }
+
     fetch('http://localhost:5000/tasks', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(updatedTask)
+      body: formData
     })
       .then(response => response.json())
       .then(data => {
         setTasks(prevTasks => [...prevTasks, data]);
       })
       .catch(error => console.error('Error creating task:', error));
-    setShowTaskForm(false);
-    setEditingTask(null);
-  };
-
-  const handleUpdateTask = (updatedTask) => {
-    fetch(`http://localhost:5000/tasks/${updatedTask.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(updatedTask)
-    })
-      .then(response => response.json())
-      .then(data => {
-        setTasks(prevTasks => prevTasks.map(task => (task.id === data.id ? data : task)));
-      })
-      .catch(error => console.error('Error updating task:', error));
     setShowTaskForm(false);
     setEditingTask(null);
   };
@@ -218,6 +202,10 @@ const AdminDashboard = () => {
   const toggleTaskForm = () => {
     setShowTaskForm(!showTaskForm);
     setEditingTask(null);
+  };
+
+  const handleTaskClick = (task) => {
+    navigate(`/tasks/${task.id}`);
   };
 
   return (
@@ -245,7 +233,7 @@ const AdminDashboard = () => {
               { id: 9, name: 'Senior Officer 4' },
               { id: 10, name: 'Senior Officer 5' },
             ]}
-            onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
+            onSubmit={handleCreateTask}
             initialTask={editingTask}
           />
         )}
@@ -266,15 +254,15 @@ const AdminDashboard = () => {
                 </thead>
                 <tbody>
                   {tasks.map(task => (
-                    <TaskRow key={task.id}>
+                    <TaskRow key={task.id} onClick={() => handleTaskClick(task)}>
                       <TaskCell>{task.id}</TaskCell>
                       <TaskCell>{task.name}</TaskCell>
                       <StatusCell status={task.status}>{task.status}</StatusCell>
                       <TaskCell>{task.deadline}</TaskCell>
                       <TaskCell>{task.assignedOfficer}</TaskCell>
                       <TaskCell>
-                        <EditButton onClick={() => handleEditTask(task)}>Edit</EditButton>
-                        <DeleteButton onClick={() => handleDeleteTask(task.id)}>Delete</DeleteButton>
+                        <EditButton onClick={(e) => { e.stopPropagation(); handleEditTask(task); }}>Edit</EditButton>
+                        <DeleteButton onClick={(e) => { e.stopPropagation(); handleDeleteTask(task.id); }}>Delete</DeleteButton>
                       </TaskCell>
                     </TaskRow>
                   ))}

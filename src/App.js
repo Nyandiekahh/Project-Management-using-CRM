@@ -1,12 +1,13 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthProvider'; // Ensure this path is correct
+import { AuthProvider } from './context/AuthProvider';
 import Login from './components/Login';
 import AdminDashboard from './pages/AdminDashboard';
 import UserManagement from './pages/UserManagement';
 import ComplaintsPage from './pages/ComplaintsPage';
 import TaskManagementPage from './pages/TaskManagementPage';
 import OfficerDashboard from './pages/OfficerDashboard';
+import TaskDetails from './pages/TaskDetails';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const App = () => {
@@ -30,6 +31,10 @@ const App = () => {
           <Route
             path="/tasks"
             element={<ProtectedRoute component={TaskManagementPage} />}
+          />
+          <Route
+            path="/tasks/:taskId"
+            element={<ProtectedRoute component={TaskDetails} />}
           />
           <Route
             path="/officer-dashboard"
