@@ -1,7 +1,7 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { FaTachometerAlt, FaTasks, FaUser, FaQuestionCircle, FaFileAlt, FaClipboardList, FaBars } from 'react-icons/fa';
+import { FaTachometerAlt, FaTasks, FaUser, FaQuestionCircle, FaFileAlt, FaClipboardList, FaBars, FaSignOutAlt } from 'react-icons/fa';
 
 const SidebarContainer = styled.div`
   width: ${props => (props.isOpen ? '250px' : '60px')};
@@ -50,7 +50,30 @@ const SidebarText = styled.span`
   transition: display 0.3s;
 `;
 
+const LogoutButton = styled.button`
+  background: none;
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  padding: 10px 20px;
+  cursor: pointer;
+  &:hover {
+    background-color: #34495e;
+  }
+`;
+
 const Sidebar = ({ isOpen, toggleSidebar }) => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // Clear user data (e.g., from localStorage or sessionStorage)
+    localStorage.clear();
+    sessionStorage.clear();
+    // Redirect to login page
+    navigate('/');
+  };
+
   return (
     <SidebarContainer isOpen={isOpen}>
       <SidebarHeader onClick={toggleSidebar}>
@@ -84,6 +107,10 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           <SidebarIcon><FaFileAlt /></SidebarIcon>
           <SidebarText isOpen={isOpen}>Reports</SidebarText>
         </SidebarLink>
+        <LogoutButton onClick={handleLogout}>
+          <SidebarIcon><FaSignOutAlt /></SidebarIcon>
+          <SidebarText isOpen={isOpen}>Logout</SidebarText>
+        </LogoutButton>
       </nav>
     </SidebarContainer>
   );

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthProvider'; // Ensure this path is correct
 
 const LoginContainer = styled.div`
   display: flex;
@@ -61,18 +62,33 @@ const ToggleButton = styled.button`
 `;
 
 const Login = () => {
-  const [userType, setUserType] = useState('admin');
-  const [workId, setWorkId] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const { handleLogin } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const credentials = {
+    deputyDirector: { username: 'deputyDirector', password: 'dd123', navigateTo: '/admin-dashboard', role: 'deputyDirector' },
+    principalOfficer1: { username: 'principalOfficer1', password: 'po123', navigateTo: '/principalOfficer-dashboard', role: 'principalOfficer' },
+    principalOfficer2: { username: 'principalOfficer2', password: 'po123', navigateTo: '/principalOfficer-dashboard', role: 'principalOfficer' },
+    principalOfficer3: { username: 'principalOfficer3', password: 'po123', navigateTo: '/principalOfficer-dashboard', role: 'principalOfficer' },
+    principalOfficer4: { username: 'principalOfficer4', password: 'po123', navigateTo: '/principalOfficer-dashboard', role: 'principalOfficer' },
+    principalOfficer5: { username: 'principalOfficer5', password: 'po123', navigateTo: '/principalOfficer-dashboard', role: 'principalOfficer' },
+    seniorOfficer1: { username: 'seniorOfficer1', password: 'so123', navigateTo: '/seniorOfficer-dashboard', role: 'seniorOfficer' },
+    seniorOfficer2: { username: 'seniorOfficer2', password: 'so123', navigateTo: '/seniorOfficer-dashboard', role: 'seniorOfficer' },
+    seniorOfficer3: { username: 'seniorOfficer3', password: 'so123', navigateTo: '/seniorOfficer-dashboard', role: 'seniorOfficer' },
+    seniorOfficer4: { username: 'seniorOfficer4', password: 'so123', navigateTo: '/seniorOfficer-dashboard', role: 'seniorOfficer' },
+    seniorOfficer5: { username: 'seniorOfficer5', password: 'so123', navigateTo: '/seniorOfficer-dashboard', role: 'seniorOfficer' },
+  };
+
+  const handleSubmit = (e) => {
     e.preventDefault();
-    if (userType === 'admin' && workId === 'admin' && password === 'admin123') {
-      navigate('/admin-dashboard');
-    } else if (userType === 'officer' && workId === 'officer' && password === 'officer123') {
-      navigate('/officer-dashboard');
+
+    const user = Object.values(credentials).find(user => user.username === username && user.password === password);
+
+    if (user) {
+      handleLogin(user, navigate);
     } else {
       alert('Invalid credentials');
     }
@@ -81,16 +97,12 @@ const Login = () => {
   return (
     <LoginContainer>
       <h2>Login</h2>
-      <Form onSubmit={handleLogin}>
-        <select value={userType} onChange={(e) => setUserType(e.target.value)} style={{ marginBottom: '20px', padding: '12px', fontSize: '18px', borderRadius: '5px' }}>
-          <option value="admin">Admin</option>
-          <option value="officer">Officer</option>
-        </select>
+      <Form onSubmit={handleSubmit}>
         <Input
           type="text"
-          placeholder="Work ID"
-          value={workId}
-          onChange={(e) => setWorkId(e.target.value)}
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
         />
         <PasswordContainer>
           <Input

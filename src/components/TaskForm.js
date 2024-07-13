@@ -3,185 +3,177 @@ import styled from 'styled-components';
 
 const FormContainer = styled.div`
   background-color: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 500px;
-  margin: 20px auto;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  margin: 0 auto;
 `;
 
-const FormTitle = styled.h2`
+const FormField = styled.div`
   margin-bottom: 20px;
-`;
-
-const FormGroup = styled.div`
-  margin-bottom: 15px;
 `;
 
 const Label = styled.label`
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
   font-weight: bold;
+  font-size: 16px;
+  color: #333;
 `;
 
 const Input = styled.input`
   width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 16px;
+  &:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 8px rgba(52, 152, 219, 0.1);
+    outline: none;
+  }
 `;
 
 const Textarea = styled.textarea`
   width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 16px;
+  &:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 8px rgba(52, 152, 219, 0.1);
+    outline: none;
+  }
 `;
 
 const Select = styled.select`
   width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 16px;
+  background-color: white;
+  &:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 8px rgba(52, 152, 219, 0.1);
+    outline: none;
+  }
 `;
 
 const Button = styled.button`
-  padding: 10px 20px;
+  padding: 14px 28px;
   background-color: #3498db;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
+  font-size: 16px;
   cursor: pointer;
-
+  transition: background-color 0.3s;
   &:hover {
     background-color: #2980b9;
   }
 `;
 
 const TaskForm = ({ officers, onSubmit, initialTask }) => {
-  const [taskName, setTaskName] = useState('');
-  const [description, setDescription] = useState('');
-  const [deadline, setDeadline] = useState('');
-  const [assignedOfficer, setAssignedOfficer] = useState('');
-  const [status, setStatus] = useState('Pending');
-  const [link, setLink] = useState('');
-  const [file, setFile] = useState(null);
+  const [task, setTask] = useState({
+    name: '',
+    description: '',
+    deadline: '',
+    assignedOfficer: officers[0].name,
+    status: 'Not Done',
+  });
 
   useEffect(() => {
     if (initialTask) {
-      setTaskName(initialTask.name);
-      setDescription(initialTask.description);
-      setDeadline(initialTask.deadline);
-      setAssignedOfficer(initialTask.assignedOfficer);
-      setStatus(initialTask.status);
-      setLink(initialTask.link);
-      setFile(initialTask.file);
+      setTask(initialTask);
     }
   }, [initialTask]);
 
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setTask((prevTask) => ({
+      ...prevTask,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    const newTask = {
-      id: initialTask ? initialTask.id : Date.now(),
-      name: taskName,
-      description,
-      deadline,
-      assignedOfficer,
-      status,
-      link,
-      file,
-    };
-
-    onSubmit(newTask);
-    setTaskName('');
-    setDescription('');
-    setDeadline('');
-    setAssignedOfficer('');
-    setStatus('Pending');
-    setLink('');
-    setFile(null);
+    onSubmit(task);
   };
+
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date().toISOString().split('T')[0];
 
   return (
     <FormContainer>
-      <FormTitle>{initialTask ? 'Edit Task' : 'Create a New Task'}</FormTitle>
       <form onSubmit={handleSubmit}>
-        <FormGroup>
-          <Label>Task Name</Label>
+        <FormField>
+          <Label htmlFor="name">Task Name</Label>
           <Input
+            id="name"
+            name="name"
             type="text"
-            value={taskName}
-            onChange={(e) => setTaskName(e.target.value)}
+            value={task.name}
+            onChange={handleChange}
             required
           />
-        </FormGroup>
-        <FormGroup>
-          <Label>Description</Label>
+        </FormField>
+        <FormField>
+          <Label htmlFor="description">Description</Label>
           <Textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            id="description"
+            name="description"
+            value={task.description}
+            onChange={handleChange}
             required
           />
-        </FormGroup>
-        <FormGroup>
-          <Label>Deadline</Label>
+        </FormField>
+        <FormField>
+          <Label htmlFor="deadline">Deadline</Label>
           <Input
+            id="deadline"
+            name="deadline"
             type="date"
-            value={deadline}
-            onChange={(e) => setDeadline(e.target.value)}
+            value={task.deadline}
+            onChange={handleChange}
+            min={today} // Set the minimum date to today's date
             required
           />
-        </FormGroup>
-        <FormGroup>
-          <Label>Assigned Officer</Label>
+        </FormField>
+        <FormField>
+          <Label htmlFor="assignedOfficer">Assigned Officer</Label>
           <Select
-            value={assignedOfficer}
-            onChange={(e) => setAssignedOfficer(e.target.value)}
+            id="assignedOfficer"
+            name="assignedOfficer"
+            value={task.assignedOfficer}
+            onChange={handleChange}
             required
           >
-            <option value="">Select an Officer</option>
             {officers.map((officer) => (
               <option key={officer.id} value={officer.name}>
                 {officer.name}
               </option>
             ))}
           </Select>
-        </FormGroup>
-        <FormGroup>
-          <Label>Status</Label>
+        </FormField>
+        <FormField>
+          <Label htmlFor="status">Status</Label>
           <Select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
+            id="status"
+            name="status"
+            value={task.status}
+            onChange={handleChange}
             required
           >
+            <option value="Not Done">Not Done</option>
             <option value="Pending">Pending</option>
             <option value="Completed">Completed</option>
-            <option value="Not Done">Not Done</option>
           </Select>
-        </FormGroup>
-        <FormGroup>
-          <Label>Optional Link</Label>
-          <Input
-            type="url"
-            value={link}
-            onChange={(e) => setLink(e.target.value)}
-          />
-        </FormGroup>
-        <FormGroup>
-          <Label>Upload File</Label>
-          <Input
-            type="file"
-            accept=".pdf,.doc,.docx,.jpg,.png"
-            onChange={handleFileChange}
-          />
-        </FormGroup>
-        <Button type="submit">{initialTask ? 'Save Changes' : 'Create Task'}</Button>
+        </FormField>
+        <Button type="submit">Save Task</Button>
       </form>
     </FormContainer>
   );

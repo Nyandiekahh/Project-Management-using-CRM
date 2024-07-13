@@ -234,15 +234,23 @@ const AdminDashboard = () => {
         {showTaskForm && (
           <TaskForm
             officers={[
-              { id: 1, name: 'Officer 1' },
-              { id: 2, name: 'Officer 2' },
+              { id: 1, name: 'Principal Officer 1' },
+              { id: 2, name: 'Principal Officer 2' },
+              { id: 3, name: 'Principal Officer 3' },
+              { id: 4, name: 'Principal Officer 4' },
+              { id: 5, name: 'Principal Officer 5' },
+              { id: 6, name: 'Senior Officer 1' },
+              { id: 7, name: 'Senior Officer 2' },
+              { id: 8, name: 'Senior Officer 3' },
+              { id: 9, name: 'Senior Officer 4' },
+              { id: 10, name: 'Senior Officer 5' },
             ]}
             onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
             initialTask={editingTask}
           />
         )}
         <CurrentTasks>
-          <h2>Current Assigned Tasks</h2>
+          <h2>Tasks List</h2>
           <TaskList>
             {tasks.length > 0 ? (
               <TaskTable>
@@ -252,6 +260,7 @@ const AdminDashboard = () => {
                     <TaskTableHeader>TASK NAME</TaskTableHeader>
                     <TaskTableHeader>TASK STATUS</TaskTableHeader>
                     <TaskTableHeader>DEADLINE</TaskTableHeader>
+                    <TaskTableHeader>ASSIGNED TO</TaskTableHeader>
                     <TaskTableHeader>ACTIONS</TaskTableHeader>
                   </tr>
                 </thead>
@@ -262,6 +271,7 @@ const AdminDashboard = () => {
                       <TaskCell>{task.name}</TaskCell>
                       <StatusCell status={task.status}>{task.status}</StatusCell>
                       <TaskCell>{task.deadline}</TaskCell>
+                      <TaskCell>{task.assignedOfficer}</TaskCell>
                       <TaskCell>
                         <EditButton onClick={() => handleEditTask(task)}>Edit</EditButton>
                         <DeleteButton onClick={() => handleDeleteTask(task.id)}>Delete</DeleteButton>
