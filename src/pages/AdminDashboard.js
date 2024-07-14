@@ -171,15 +171,30 @@ const AdminDashboard = () => {
       formData.append('document', newTask.document);
     }
 
-    fetch('http://localhost:5000/tasks', {
-      method: 'POST',
-      body: formData
-    })
-      .then(response => response.json())
-      .then(data => {
-        setTasks(prevTasks => [...prevTasks, data]);
+    if (newTask.id) {
+      // If task ID exists, update the existing task
+      fetch(`http://localhost:5000/tasks/${newTask.id}`, {
+        method: 'PUT',
+        body: formData
       })
-      .catch(error => console.error('Error creating task:', error));
+        .then(response => response.json())
+        .then(updatedTask => {
+          setTasks(prevTasks => prevTasks.map(task => task.id === updatedTask.id ? updatedTask : task));
+        })
+        .catch(error => console.error('Error updating task:', error));
+    } else {
+      // If no task ID, create a new task
+      fetch('http://localhost:5000/tasks', {
+        method: 'POST',
+        body: formData
+      })
+        .then(response => response.json())
+        .then(data => {
+          setTasks(prevTasks => [...prevTasks, data]);
+        })
+        .catch(error => console.error('Error creating task:', error));
+    }
+
     setShowTaskForm(false);
     setEditingTask(null);
   };
@@ -246,6 +261,7 @@ const AdminDashboard = () => {
               <TaskTable>
                 <thead>
                   <tr>
+                    <TaskTableHeader>S/No</TaskTableHeader>
                     <TaskTableHeader>TASK ID</TaskTableHeader>
                     <TaskTableHeader>TASK NAME</TaskTableHeader>
                     <TaskTableHeader>TASK STATUS</TaskTableHeader>
@@ -257,7 +273,8 @@ const AdminDashboard = () => {
                 <tbody>
                   {tasks.map((task, index) => (
                     <TaskRow key={task.id} onClick={() => handleTaskClick(task)}>
-                      <TaskCell>{index + 1}</TaskCell>
+                      <TaskCell>{index + 1}</TaskCell> {/* S/No */}
+                      <TaskCell>{task.id}</TaskCell> {/* TASK ID */}
                       <TaskCell>{task.name}</TaskCell>
                       <StatusCell status={task.status}>{task.status}</StatusCell>
                       <TaskCell>{task.deadline}</TaskCell>

@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import '../datepicker.css'; // Import custom styles
+import { addBusinessDays, formatDate, isHoliday } from '../utils/dateUtils'; // Adjust the path as needed
 
 const FormContainer = styled.div`
   background-color: white;
@@ -8,6 +12,7 @@ const FormContainer = styled.div`
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   max-width: 600px;
   margin: 0 auto;
+  font-family: 'Arial', sans-serif;
 `;
 
 const FormField = styled.div`
@@ -76,20 +81,44 @@ const Button = styled.button`
   }
 `;
 
+const StyledDatePicker = styled(DatePicker)`
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 16px;
+  background-color: white;
+  &:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 8px rgba(52, 152, 219, 0.1);
+    outline: none;
+  }
+`;
+
+const Title = styled.h2`
+  text-align: center;
+  margin-bottom: 20px;
+  color: #3498db;
+`;
+
 const TaskForm = ({ officers, onSubmit, initialTask }) => {
   const [task, setTask] = useState({
+    id: '',
     name: '',
     description: '',
     deadline: '',
     assignedOfficer: officers[0].name,
-    status: 'Not Done',
     document: null,
     timeframe: 0
   });
 
   useEffect(() => {
     if (initialTask) {
-      setTask(initialTask);
+      const daysDiff = Math.ceil((new Date(initialTask.deadline) - new Date()) / (1000 * 60 * 60 * 24));
+      setTask({
+        ...initialTask,
+        timeframe: daysDiff
+      });
     }
   }, [initialTask]);
 
@@ -101,25 +130,26 @@ const TaskForm = ({ officers, onSubmit, initialTask }) => {
     }));
   };
 
-  const calculateDeadline = (timeframe) => {
-    let date = new Date();
-    let daysAdded = 0;
-    while (daysAdded < timeframe) {
-      date.setDate(date.getDate() + 1);
-      if (date.getDay() !== 0 && date.getDay() !== 6) {
-        daysAdded++;
-      }
-    }
-    return date.toISOString().split('T')[0];
-  };
-
   const handleTimeframeChange = (e) => {
     const { value } = e.target;
-    const deadline = calculateDeadline(Number(value));
+    const timeframe = parseInt(value, 10);
+    const deadline = addBusinessDays(new Date(), timeframe);
     setTask((prevTask) => ({
       ...prevTask,
-      timeframe: value,
-      deadline
+      timeframe,
+      deadline: formatDate(deadline),
+    }));
+  };
+
+  const handleDateChange = (date) => {
+    const now = new Date();
+    const timeframe = Math.ceil(
+      (date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    setTask((prevTask) => ({
+      ...prevTask,
+      timeframe,
+      deadline: formatDate(date),
     }));
   };
 
@@ -130,6 +160,7 @@ const TaskForm = ({ officers, onSubmit, initialTask }) => {
 
   return (
     <FormContainer>
+      <Title>{task.id ? 'Editing Previously Assigned Task' : 'Create New Task'}</Title>
       <form onSubmit={handleSubmit}>
         <FormField>
           <Label htmlFor="name">Task Name</Label>
@@ -160,17 +191,21 @@ const TaskForm = ({ officers, onSubmit, initialTask }) => {
             type="number"
             value={task.timeframe}
             onChange={handleTimeframeChange}
+            min="1"
             required
           />
         </FormField>
         <FormField>
           <Label htmlFor="deadline">Deadline</Label>
-          <Input
-            id="deadline"
-            name="deadline"
-            type="date"
-            value={task.deadline}
-            readOnly
+          <StyledDatePicker
+            selected={task.deadline ? new Date(task.deadline) : null}
+            onChange={handleDateChange}
+            minDate={new Date()}
+            filterDate={(date) => {
+              const day = date.getDay();
+              return day !== 0 && day !== 6 && !isHoliday(date);
+            }}
+            required
           />
         </FormField>
         <FormField>
@@ -198,7 +233,7 @@ const TaskForm = ({ officers, onSubmit, initialTask }) => {
             onChange={handleChange}
           />
         </FormField>
-        <Button type="submit">Save Task</Button>
+        <Button type="submit">{task.id ? 'Update Task' : 'Save Task'}</Button>
       </form>
     </FormContainer>
   );
