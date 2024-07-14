@@ -4,6 +4,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css'; // Correct import for datepicker CSS
 import { addBusinessDays, formatDate, isHoliday } from '../utils/dateUtils'; // Adjust the path as needed
 import { isSaturday, isSunday } from 'date-fns'; // Import isSaturday and isSunday from date-fns
+import Select from 'react-select';
 
 const FormContainer = styled.div`
   background-color: white;
@@ -53,18 +54,12 @@ const Textarea = styled.textarea`
   }
 `;
 
-const Select = styled.select`
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 16px;
-  background-color: white;
-  &:focus {
-    border-color: #3498db;
-    box-shadow: 0 0 8px rgba(52, 152, 219, 0.1);
-    outline: none;
-  }
+const Checkbox = styled.input`
+  margin-right: 10px;
+`;
+
+const SelectField = styled(Select)`
+  margin-top: 10px;
 `;
 
 const Button = styled.button`
@@ -116,7 +111,9 @@ const TaskForm = ({ officers, onSubmit, initialTask }) => {
     deadline: '',
     assignedOfficer: officers[0].name,
     document: null,
-    timeframe: 0
+    timeframe: 0,
+    collaboration: false,
+    collaborators: []
   });
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -125,17 +122,23 @@ const TaskForm = ({ officers, onSubmit, initialTask }) => {
       const daysDiff = Math.ceil((new Date(initialTask.deadline) - new Date()) / (1000 * 60 * 60 * 24));
       setTask({
         ...initialTask,
-        timeframe: daysDiff
+        timeframe: daysDiff,
+        collaboration: initialTask.collaborators && initialTask.collaborators.length > 0,
       });
     }
   }, [initialTask]);
 
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    setTask((prevTask) => ({
-      ...prevTask,
-      [name]: files ? files[0] : value,
-    }));
+    const { name, value, files, type, checked } = e.target;
+    setTask((prevTask) => {
+      let updatedTask = { ...prevTask, [name]: type === 'checkbox' ? checked : files ? files[0] : value };
+      if (name === 'collaboration' && checked) {
+        updatedTask.assignedOfficer = prevTask.collaborators.map(c => c.label).join(', ');
+      } else if (name === 'collaboration' && !checked) {
+        updatedTask.assignedOfficer = '';
+      }
+      return updatedTask;
+    });
   };
 
   const handleTimeframeChange = (e) => {
@@ -167,6 +170,17 @@ const TaskForm = ({ officers, onSubmit, initialTask }) => {
       deadline: formatDate(date),
     }));
     setErrorMessage('');
+  };
+
+  const handleCollaboratorsChange = (selectedOptions) => {
+    setTask((prevTask) => {
+      let collaborators = selectedOptions ? selectedOptions : [];
+      return {
+        ...prevTask,
+        collaborators,
+        assignedOfficer: task.collaboration ? collaborators.map(c => c.label).join(', ') : prevTask.assignedOfficer,
+      };
+    });
   };
 
   const handleSubmit = (e) => {
@@ -229,20 +243,39 @@ const TaskForm = ({ officers, onSubmit, initialTask }) => {
           {errorMessage && <ErrorMessage>{errorMessage}</ErrorMessage>}
         </FormField>
         <FormField>
+          <Checkbox
+            id="collaboration"
+            name="collaboration"
+            type="checkbox"
+            checked={task.collaboration}
+            onChange={handleChange}
+          />
+          <Label htmlFor="collaboration" style={{ display: 'inline' }}>Enable Collaboration</Label>
+        </FormField>
+        {task.collaboration && (
+          <FormField>
+            <Label htmlFor="collaborators">Select Collaborators</Label>
+            <SelectField
+              id="collaborators"
+              name="collaborators"
+              isMulti
+              options={officers.map(officer => ({ value: officer.name, label: officer.name }))}
+              value={task.collaborators}
+              onChange={handleCollaboratorsChange}
+            />
+          </FormField>
+        )}
+        <FormField>
           <Label htmlFor="assignedOfficer">Assigned Officer</Label>
           <Select
             id="assignedOfficer"
             name="assignedOfficer"
-            value={task.assignedOfficer}
-            onChange={handleChange}
+            value={{ value: task.assignedOfficer, label: task.assignedOfficer }}
+            onChange={(selectedOption) => handleChange({ target: { name: 'assignedOfficer', value: selectedOption.value } })}
             required
-          >
-            {officers.map((officer) => (
-              <option key={officer.id} value={officer.name}>
-                {officer.name}
-              </option>
-            ))}
-          </Select>
+            isDisabled={task.collaboration} // Disable manual selection when collaboration is enabled
+            options={officers.map((officer) => ({ value: officer.name, label: officer.name }))}
+          />
         </FormField>
         <FormField>
           <Label htmlFor="document">Upload Document</Label>

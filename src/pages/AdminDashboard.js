@@ -278,7 +278,7 @@ const AdminDashboard = () => {
                       <TaskCell>{task.name}</TaskCell>
                       <StatusCell status={task.status}>{task.status}</StatusCell>
                       <TaskCell>{task.deadline}</TaskCell>
-                      <TaskCell>{task.assignedOfficer}</TaskCell>
+                      <TaskCell>{task.collaborators && task.collaborators.length > 0 ? task.collaborators.join(', ') : task.assignedOfficer}</TaskCell>
                       <TaskCell>
                         <EditButton onClick={(e) => { e.stopPropagation(); handleEditTask(task); }}>Edit</EditButton>
                         <DeleteButton onClick={(e) => { e.stopPropagation(); handleDeleteTask(task.id); }}>Delete</DeleteButton>
