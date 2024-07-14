@@ -63,8 +63,9 @@ const TaskList = () => {
   return (
     <TaskListContainer>
       <h1>Task List</h1>
-      {tasks.map(task => (
+      {tasks.map((task, index) => (
         <TaskItem key={task.id}>
+          <TaskDetail><strong>S/No:</strong> {index + 1}</TaskDetail>
           <TaskDetail><strong>Task Name:</strong> {task.name}</TaskDetail>
           <TaskDetail><strong>Description:</strong> {task.description}</TaskDetail>
           <TaskDetail><strong>Deadline:</strong> {task.deadline}</TaskDetail>

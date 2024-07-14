@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import Sidebar from '../components/Sidebar';
 import TaskForm from '../components/TaskForm';
+import Clock from '../components/Clock';
 
 const DashboardContainer = styled.div`
   display: flex;
@@ -212,6 +213,7 @@ const AdminDashboard = () => {
     <DashboardContainer>
       <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
       <Content isSidebarOpen={isSidebarOpen}>
+        <Clock />  {/* Add the Clock component here */}
         <WelcomeMessage>
           Welcome back, Admin
           <p>We're delighted to have you. Need help on system walk through? Navigate to virtual assistant on the side menu.</p>
@@ -253,9 +255,9 @@ const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {tasks.map(task => (
+                  {tasks.map((task, index) => (
                     <TaskRow key={task.id} onClick={() => handleTaskClick(task)}>
-                      <TaskCell>{task.id}</TaskCell>
+                      <TaskCell>{index + 1}</TaskCell>
                       <TaskCell>{task.name}</TaskCell>
                       <StatusCell status={task.status}>{task.status}</StatusCell>
                       <TaskCell>{task.deadline}</TaskCell>

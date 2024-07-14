@@ -83,7 +83,8 @@ const TaskForm = ({ officers, onSubmit, initialTask }) => {
     deadline: '',
     assignedOfficer: officers[0].name,
     status: 'Not Done',
-    document: null
+    document: null,
+    timeframe: 0
   });
 
   useEffect(() => {
@@ -100,13 +101,32 @@ const TaskForm = ({ officers, onSubmit, initialTask }) => {
     }));
   };
 
+  const calculateDeadline = (timeframe) => {
+    let date = new Date();
+    let daysAdded = 0;
+    while (daysAdded < timeframe) {
+      date.setDate(date.getDate() + 1);
+      if (date.getDay() !== 0 && date.getDay() !== 6) {
+        daysAdded++;
+      }
+    }
+    return date.toISOString().split('T')[0];
+  };
+
+  const handleTimeframeChange = (e) => {
+    const { value } = e.target;
+    const deadline = calculateDeadline(Number(value));
+    setTask((prevTask) => ({
+      ...prevTask,
+      timeframe: value,
+      deadline
+    }));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit(task);
   };
-
-  // Get today's date in YYYY-MM-DD format
-  const today = new Date().toISOString().split('T')[0];
 
   return (
     <FormContainer>
@@ -133,15 +153,24 @@ const TaskForm = ({ officers, onSubmit, initialTask }) => {
           />
         </FormField>
         <FormField>
+          <Label htmlFor="timeframe">Timeframe (Weekdays)</Label>
+          <Input
+            id="timeframe"
+            name="timeframe"
+            type="number"
+            value={task.timeframe}
+            onChange={handleTimeframeChange}
+            required
+          />
+        </FormField>
+        <FormField>
           <Label htmlFor="deadline">Deadline</Label>
           <Input
             id="deadline"
             name="deadline"
             type="date"
             value={task.deadline}
-            onChange={handleChange}
-            min={today} // Set the minimum date to today's date
-            required
+            readOnly
           />
         </FormField>
         <FormField>

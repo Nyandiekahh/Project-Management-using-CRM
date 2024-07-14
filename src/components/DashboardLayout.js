@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import Sidebar from './Sidebar';
+import Clock from './Clock';
 
 const DashboardContainer = styled.div`
   display: flex;
@@ -15,6 +16,16 @@ const Content = styled.div`
   transition: margin-left 0.3s;
 `;
 
+const Header = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+`;
+
 const DashboardLayout = ({ children }) => {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
 
@@ -26,6 +37,9 @@ const DashboardLayout = ({ children }) => {
     <DashboardContainer>
       <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
       <Content isSidebarOpen={isSidebarOpen}>
+        <Header>
+          <Clock />
+        </Header>
         {children}
       </Content>
     </DashboardContainer>
