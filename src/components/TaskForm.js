@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
-import '../datepicker.css'; // Import custom styles
+import 'react-datepicker/dist/react-datepicker.css'; // Correct import for datepicker CSS
 import { addBusinessDays, formatDate, isHoliday } from '../utils/dateUtils'; // Adjust the path as needed
+import { isSaturday, isSunday } from 'date-fns'; // Import isSaturday and isSunday from date-fns
 
 const FormContainer = styled.div`
   background-color: white;
@@ -101,6 +101,13 @@ const Title = styled.h2`
   color: #3498db;
 `;
 
+const ErrorMessage = styled.p`
+  color: red;
+  font-size: 14px;
+  margin-top: -10px;
+  margin-bottom: 10px;
+`;
+
 const TaskForm = ({ officers, onSubmit, initialTask }) => {
   const [task, setTask] = useState({
     id: '',
@@ -111,6 +118,7 @@ const TaskForm = ({ officers, onSubmit, initialTask }) => {
     document: null,
     timeframe: 0
   });
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     if (initialTask) {
@@ -142,19 +150,30 @@ const TaskForm = ({ officers, onSubmit, initialTask }) => {
   };
 
   const handleDateChange = (date) => {
+    const holiday = isHoliday(date);
+    if (isSaturday(date) || isSunday(date)) {
+      setErrorMessage('You cannot set a deadline on a weekend.');
+      return;
+    } else if (holiday) {
+      setErrorMessage(`You cannot set a deadline on ${holiday}.`);
+      return;
+    }
+
     const now = new Date();
-    const timeframe = Math.ceil(
-      (date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-    );
+    const timeframe = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     setTask((prevTask) => ({
       ...prevTask,
       timeframe,
       deadline: formatDate(date),
     }));
+    setErrorMessage('');
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (errorMessage) {
+      return;
+    }
     onSubmit(task);
   };
 
@@ -207,6 +226,7 @@ const TaskForm = ({ officers, onSubmit, initialTask }) => {
             }}
             required
           />
+          {errorMessage && <ErrorMessage>{errorMessage}</ErrorMessage>}
         </FormField>
         <FormField>
           <Label htmlFor="assignedOfficer">Assigned Officer</Label>

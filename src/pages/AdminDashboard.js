@@ -161,25 +161,25 @@ const AdminDashboard = () => {
       .catch(error => console.error('Error fetching tasks:', error));
   }, []);
 
-  const handleCreateTask = (newTask) => {
+  const handleCreateTask = (task) => {
     const formData = new FormData();
-    formData.append('name', newTask.name);
-    formData.append('description', newTask.description);
-    formData.append('deadline', newTask.deadline);
-    formData.append('assignedOfficer', newTask.assignedOfficer);
-    if (newTask.document) {
-      formData.append('document', newTask.document);
+    formData.append('name', task.name);
+    formData.append('description', task.description);
+    formData.append('deadline', task.deadline);
+    formData.append('assignedOfficer', task.assignedOfficer);
+    if (task.document) {
+      formData.append('document', task.document);
     }
 
-    if (newTask.id) {
+    if (task.id) {
       // If task ID exists, update the existing task
-      fetch(`http://localhost:5000/tasks/${newTask.id}`, {
+      fetch(`http://localhost:5000/tasks/${task.id}`, {
         method: 'PUT',
         body: formData
       })
         .then(response => response.json())
         .then(updatedTask => {
-          setTasks(prevTasks => prevTasks.map(task => task.id === updatedTask.id ? updatedTask : task));
+          setTasks(prevTasks => prevTasks.map(t => t.id === updatedTask.id ? updatedTask : t));
         })
         .catch(error => console.error('Error updating task:', error));
     } else {

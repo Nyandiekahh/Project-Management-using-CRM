@@ -79,6 +79,35 @@ app.post('/tasks', upload.single('document'), (req, res) => {
   });
 });
 
+app.put('/tasks/:id', upload.single('document'), (req, res) => {
+  const taskId = parseInt(req.params.id, 10);
+  fs.readFile(tasksFilePath, 'utf8', (err, data) => {
+    if (err) {
+      return res.status(500).json({ error: 'Error reading tasks file' });
+    }
+    let tasks = JSON.parse(data);
+    const taskIndex = tasks.findIndex(task => task.id === taskId);
+    if (taskIndex === -1) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    const updatedTask = {
+      ...tasks[taskIndex],
+      ...req.body,
+      documentUrl: req.file ? `/uploads/${req.file.filename}` : tasks[taskIndex].documentUrl
+    };
+
+    tasks[taskIndex] = updatedTask;
+
+    fs.writeFile(tasksFilePath, JSON.stringify(tasks, null, 2), 'utf8', err => {
+      if (err) {
+        return res.status(500).json({ error: 'Error writing tasks file' });
+      }
+      res.json(updatedTask);
+    });
+  });
+});
+
 app.delete('/tasks/:id', (req, res) => {
   const taskId = parseInt(req.params.id, 10);
   fs.readFile(tasksFilePath, 'utf8', (err, data) => {
