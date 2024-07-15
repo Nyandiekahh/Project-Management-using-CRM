@@ -9,6 +9,8 @@ import TaskManagementPage from './pages/TaskManagementPage';
 import OfficerDashboard from './pages/OfficerDashboard';
 import TaskDetails from './pages/TaskDetails';
 import ProtectedRoute from './components/ProtectedRoute';
+import PrincipalOfficerDashboard from './pages/PrincipalOfficerDashboard';
+import SeniorOfficerDashboard from './pages/SeniorOfficerDashboard';
 
 const App = () => {
   return (
@@ -39,6 +41,14 @@ const App = () => {
           <Route
             path="/officer-dashboard"
             element={<ProtectedRoute component={OfficerDashboard} role="officer" />}
+          />
+          <Route
+            path="/principal-officer-dashboard"
+            element={<ProtectedRoute component={PrincipalOfficerDashboard} role="principalOfficer" />}
+          />
+          <Route
+            path="/senior-officer-dashboard"
+            element={<ProtectedRoute component={SeniorOfficerDashboard} role="seniorOfficer" />}
           />
           <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>

@@ -65,21 +65,21 @@ const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const { handleLogin } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const credentials = {
     deputyDirector: { username: 'deputyDirector', password: 'dd123', navigateTo: '/admin-dashboard', role: 'deputyDirector' },
-    principalOfficer1: { username: 'principalOfficer1', password: 'po123', navigateTo: '/principalOfficer-dashboard', role: 'principalOfficer' },
-    principalOfficer2: { username: 'principalOfficer2', password: 'po123', navigateTo: '/principalOfficer-dashboard', role: 'principalOfficer' },
-    principalOfficer3: { username: 'principalOfficer3', password: 'po123', navigateTo: '/principalOfficer-dashboard', role: 'principalOfficer' },
-    principalOfficer4: { username: 'principalOfficer4', password: 'po123', navigateTo: '/principalOfficer-dashboard', role: 'principalOfficer' },
-    principalOfficer5: { username: 'principalOfficer5', password: 'po123', navigateTo: '/principalOfficer-dashboard', role: 'principalOfficer' },
-    seniorOfficer1: { username: 'seniorOfficer1', password: 'so123', navigateTo: '/seniorOfficer-dashboard', role: 'seniorOfficer' },
-    seniorOfficer2: { username: 'seniorOfficer2', password: 'so123', navigateTo: '/seniorOfficer-dashboard', role: 'seniorOfficer' },
-    seniorOfficer3: { username: 'seniorOfficer3', password: 'so123', navigateTo: '/seniorOfficer-dashboard', role: 'seniorOfficer' },
-    seniorOfficer4: { username: 'seniorOfficer4', password: 'so123', navigateTo: '/seniorOfficer-dashboard', role: 'seniorOfficer' },
-    seniorOfficer5: { username: 'seniorOfficer5', password: 'so123', navigateTo: '/seniorOfficer-dashboard', role: 'seniorOfficer' },
+    principalOfficer1: { username: 'principalOfficer1', password: 'po123', navigateTo: '/principal-officer-dashboard', role: 'principalOfficer' },
+    principalOfficer2: { username: 'principalOfficer2', password: 'po123', navigateTo: '/principal-officer-dashboard', role: 'principalOfficer' },
+    principalOfficer3: { username: 'principalOfficer3', password: 'po123', navigateTo: '/principal-officer-dashboard', role: 'principalOfficer' },
+    principalOfficer4: { username: 'principalOfficer4', password: 'po123', navigateTo: '/principal-officer-dashboard', role: 'principalOfficer' },
+    principalOfficer5: { username: 'principalOfficer5', password: 'po123', navigateTo: '/principal-officer-dashboard', role: 'principalOfficer' },
+    seniorOfficer1: { username: 'seniorOfficer1', password: 'so123', navigateTo: '/senior-officer-dashboard', role: 'seniorOfficer' },
+    seniorOfficer2: { username: 'seniorOfficer2', password: 'so123', navigateTo: '/senior-officer-dashboard', role: 'seniorOfficer' },
+    seniorOfficer3: { username: 'seniorOfficer3', password: 'so123', navigateTo: '/senior-officer-dashboard', role: 'seniorOfficer' },
+    seniorOfficer4: { username: 'seniorOfficer4', password: 'so123', navigateTo: '/senior-officer-dashboard', role: 'seniorOfficer' },
+    seniorOfficer5: { username: 'seniorOfficer5', password: 'so123', navigateTo: '/senior-officer-dashboard', role: 'seniorOfficer' },
   };
 
   const handleSubmit = (e) => {
@@ -88,7 +88,8 @@ const Login = () => {
     const user = Object.values(credentials).find(user => user.username === username && user.password === password);
 
     if (user) {
-      handleLogin(user, navigate);
+      login(user.username, user.role);
+      navigate(user.navigateTo);
     } else {
       alert('Invalid credentials');
     }

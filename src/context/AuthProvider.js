@@ -1,37 +1,52 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-// Create a context for authentication
-const AuthContext = createContext();
+export const AuthContext = createContext();
 
-// Custom hook to use the AuthContext
-export const useAuth = () => useContext(AuthContext);
-
-// AuthProvider component to provide authentication context to children
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (user) {
-      setUser(user);
+    // Mock authentication check
+    const loggedInUser = JSON.parse(localStorage.getItem('user'));
+    if (loggedInUser) {
+      setUser(loggedInUser);
     }
   }, []);
 
-  const handleLogin = (user, navigate) => {
-    localStorage.setItem('user', JSON.stringify(user));
-    setUser(user);
-    navigate(user.navigateTo, { replace: true });
+  const login = (username, role) => {
+    const newUser = { username, role };
+    localStorage.setItem('user', JSON.stringify(newUser));
+    setUser(newUser);
+
+    switch(role) {
+      case 'deputyDirector':
+        navigate('/admin-dashboard');
+        break;
+      case 'principalOfficer':
+        navigate('/principal-officer-dashboard');
+        break;
+      case 'seniorOfficer':
+        navigate('/senior-officer-dashboard');
+        break;
+      default:
+        navigate('/officer-dashboard');
+        break;
+    }
   };
 
-  const handleLogout = (navigate) => {
+  const logout = () => {
     localStorage.removeItem('user');
     setUser(null);
-    navigate('/login', { replace: true });
+    navigate('/login');
   };
 
   return (
-    <AuthContext.Provider value={{ user, handleLogin, handleLogout }}>
+    <AuthContext.Provider value={{ user, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
+
+export const useAuth = () => useContext(AuthContext);
