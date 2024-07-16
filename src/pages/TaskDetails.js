@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import DashboardLayout from '../components/DashboardLayout';
@@ -43,9 +43,36 @@ const Button = styled.button`
   cursor: pointer;
   border-radius: 5px;
   margin-top: 20px;
+  margin-right: 10px;
   &:hover {
     background-color: #0056b3;
   }
+`;
+
+const ProgressContainer = styled.div`
+  margin-top: 20px;
+`;
+
+const ProgressBar = styled.input`
+  width: 100%;
+  margin-top: 10px;
+`;
+
+const ProgressLabel = styled.label`
+  font-size: 16px;
+  color: #495057;
+`;
+
+const Message = styled.div`
+  font-size: 14px;
+  color: #888;
+  margin-top: 5px;
+`;
+
+const ProgressPercentage = styled.div`
+  font-size: 16px;
+  color: #495057;
+  margin-top: 10px;
 `;
 
 const formatDate = (dateString) => {
@@ -59,7 +86,10 @@ const TaskDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showEditor, setShowEditor] = useState(false);
+  const [editorContent, setEditorContent] = useState('');
+  const [progress, setProgress] = useState(0);
   const { user } = useAuth();
+  const saveInterval = useRef(null);
 
   useEffect(() => {
     fetch(`http://localhost:5000/tasks/${taskId}`)
@@ -71,6 +101,8 @@ const TaskDetails = () => {
       })
       .then(data => {
         setTask(data);
+        setEditorContent(data.content || ''); // Load saved content
+        setProgress(data.progress || 0); // Load saved progress
         setLoading(false);
       })
       .catch(error => {
@@ -78,10 +110,58 @@ const TaskDetails = () => {
         setError(error);
         setLoading(false);
       });
+
+    // Cleanup interval on component unmount
+    return () => {
+      clearInterval(saveInterval.current);
+    };
   }, [taskId]);
 
-  const handleEditorButtonClick = () => {
+  const handleEditorButtonClick = (isContinue = false) => {
     setShowEditor(true);
+    if (isContinue) {
+      setEditorContent(task.content || ''); // Load saved content if continuing
+    }
+    // Start auto-saving every second
+    saveInterval.current = setInterval(() => {
+      handleSave();
+    }, 1000);
+  };
+
+  const handleEditorChange = (content) => {
+    setEditorContent(content);
+  };
+
+  const handleSave = () => {
+    fetch(`http://localhost:5000/tasks/${task.id}/save-content`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ content: editorContent })
+    })
+      .then(response => response.json())
+      .then(updatedTask => {
+        setTask(updatedTask);
+      })
+      .catch(error => console.error('Error saving content:', error));
+  };
+
+  const handleProgressChange = (e) => {
+    const newProgress = e.target.value;
+    setProgress(newProgress);
+    fetch(`http://localhost:5000/tasks/${task.id}/save-progress`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ progress: newProgress })
+    })
+      .then(response => response.json())
+      .then(updatedTask => {
+        setTask(updatedTask);
+      })
+      .catch(error => console.error('Error saving progress:', error));
   };
 
   const formatUsername = (username) => {
@@ -141,42 +221,84 @@ const TaskDetails = () => {
             </DocumentContainer>
           ) : 'No completion document uploaded'}
         </TaskDetail>
+        <ProgressContainer>
+          <ProgressLabel>
+            <strong>Progress:</strong>
+            {isUserAssigned(task.assignedOfficer) ? (
+              <>
+                <Message>It is good to update your progress bar regularly.</Message>
+                <ProgressBar
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={progress}
+                  onChange={handleProgressChange}
+                />
+                <ProgressPercentage>{progress}%</ProgressPercentage>
+              </>
+            ) : (
+              <>
+                <ProgressBar
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={progress}
+                  readOnly
+                />
+                <ProgressPercentage>{progress}%</ProgressPercentage>
+              </>
+            )}
+          </ProgressLabel>
+        </ProgressContainer>
         {isUserAssigned(task.assignedOfficer) && (
-          <Button onClick={handleEditorButtonClick}>Start task here</Button>
-        )}
-        {showEditor && (
-          <Editor
-            apiKey="lz7c3bkxd3jk907smlhgwf1s70yqdbckdjdjdehbg48h5x8y"  // Replace with your TinyMCE API key if needed
-            init={{
-              height: 500,
-              menubar: true,
-              plugins: [
-                'advlist autolink lists link image charmap print preview anchor',
-                'searchreplace visualblocks code fullscreen',
-                'insertdatetime media table paste code help wordcount'
-              ],
-              toolbar: 'undo redo | formatselect | bold italic backcolor | \
-                        alignleft aligncenter alignright alignjustify | \
-                        bullist numlist outdent indent | removeformat | help',
-              setup: (editor) => {
-                editor.on('init', () => {
-                  editor.setContent('<p style="color: #888;">Start typing here...</p>');
-                });
-                editor.on('focus', () => {
-                  const content = editor.getContent({ format: 'text' });
-                  if (content === 'Start typing here...') {
-                    editor.setContent('');
-                  }
-                });
-                editor.on('blur', () => {
-                  const content = editor.getContent({ format: 'text' });
-                  if (content === '') {
-                    editor.setContent('<p style="color: #888;">Start typing here...</p>');
-                  }
-                });
-              }
-            }}
-          />
+          <>
+            {!showEditor && (
+              <>
+                <Button onClick={() => handleEditorButtonClick(false)}>Start task here</Button>
+                {task.content && <Button onClick={() => handleEditorButtonClick(true)}>Continue from where you left</Button>}
+              </>
+            )}
+            {showEditor && (
+              <>
+                <Editor
+                  apiKey="lz7c3bkxd3jk907smlhgwf1s70yqdbckdjdjdehbg48h5x8y"  // Replace with your TinyMCE API key if needed
+                  value={editorContent}
+                  onEditorChange={handleEditorChange}
+                  init={{
+                    height: 500,
+                    menubar: true,
+                    plugins: [
+                      'advlist autolink lists link image charmap print preview anchor',
+                      'searchreplace visualblocks code fullscreen',
+                      'insertdatetime media table paste code help wordcount'
+                    ],
+                    toolbar: 'undo redo | formatselect | bold italic backcolor | \
+                              alignleft aligncenter alignright alignjustify | \
+                              bullist numlist outdent indent | removeformat | help',
+                    setup: (editor) => {
+                      editor.on('init', () => {
+                        if (!task.content) {
+                          editor.setContent('<p style="color: #888;">Start typing here...</p>');
+                        }
+                      });
+                      editor.on('focus', () => {
+                        const content = editor.getContent({ format: 'text' });
+                        if (content === 'Start typing here...') {
+                          editor.setContent('');
+                        }
+                      });
+                      editor.on('blur', () => {
+                        const content = editor.getContent({ format: 'text' });
+                        if (content === '') {
+                          editor.setContent('<p style="color: #888;">Start typing here...</p>');
+                        }
+                      });
+                    }
+                  }}
+                />
+              </>
+            )}
+          </>
         )}
       </TaskDetailsContainer>
     </DashboardLayout>
