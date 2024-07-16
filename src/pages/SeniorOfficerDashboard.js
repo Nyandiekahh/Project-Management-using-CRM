@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthProvider';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import Sidebar from '../components/Sidebar';
@@ -93,21 +94,8 @@ const NoTasksMessage = styled.div`
   }
 `;
 
-const Button = styled.button`
-  padding: 10px 20px;
-  background-color: #3498db;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-bottom: 20px;
-
-  &:hover {
-    background-color: #2980b9;
-  }
-`;
-
-const SeniorOfficerDashboard = ({ officerName }) => {
+const SeniorOfficerDashboard = () => {
+  const { user } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
@@ -141,7 +129,7 @@ const SeniorOfficerDashboard = ({ officerName }) => {
       <Content isSidebarOpen={isSidebarOpen}>
         <Clock />  {/* Add the Clock component here */}
         <WelcomeMessage>
-          Welcome back, {officerName}
+          Welcome back, {user ? user.username : 'Senior Officer'}
         </WelcomeMessage>
         <CurrentTasks>
           <h2>Tasks List</h2>

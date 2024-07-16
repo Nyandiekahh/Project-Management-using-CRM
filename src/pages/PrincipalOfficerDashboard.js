@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthProvider';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import Sidebar from '../components/Sidebar';
@@ -112,7 +113,8 @@ const DelegateButton = styled.button`
   }
 `;
 
-const PrincipalOfficerDashboard = ({ officerName }) => {
+const PrincipalOfficerDashboard = () => {
+  const { user } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
@@ -150,7 +152,7 @@ const PrincipalOfficerDashboard = ({ officerName }) => {
       <Content isSidebarOpen={isSidebarOpen}>
         <Clock />  {/* Add the Clock component here */}
         <WelcomeMessage>
-          Welcome back, {officerName}
+          Welcome back, {user ? user.username : 'Principal Officer'}
         </WelcomeMessage>
         <CurrentTasks>
           <h2>Tasks List</h2>
@@ -180,7 +182,7 @@ const PrincipalOfficerDashboard = ({ officerName }) => {
                       <TaskCell>
                         <DelegateButton
                           onClick={(e) => { e.stopPropagation(); handleDelegateTask(task.id); }}
-                          disabled={!task.assignedOfficer.includes(officerName)}
+                          disabled={task.assignedOfficer !== user.username}
                         >
                           Delegate
                         </DelegateButton>

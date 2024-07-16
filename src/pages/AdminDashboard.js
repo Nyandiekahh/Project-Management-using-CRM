@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthProvider';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import Sidebar from '../components/Sidebar';
@@ -136,6 +137,7 @@ const DeleteButton = styled.button`
 `;
 
 const AdminDashboard = () => {
+  const { user } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
@@ -230,7 +232,7 @@ const AdminDashboard = () => {
       <Content isSidebarOpen={isSidebarOpen}>
         <Clock />  {/* Add the Clock component here */}
         <WelcomeMessage>
-          Welcome back, Admin
+          Welcome back, {user ? user.username : 'Admin'}
           <p>We're delighted to have you. Need help on system walk through? Navigate to virtual assistant on the side menu.</p>
         </WelcomeMessage>
         <Button onClick={toggleTaskForm}>
