@@ -123,13 +123,20 @@ const SeniorOfficerDashboard = () => {
     navigate(`/tasks/${task.id}`);
   };
 
+  const formatUsername = (username) => {
+    return username
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/([0-9])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase());
+  };
+
   return (
     <DashboardContainer>
       <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
       <Content isSidebarOpen={isSidebarOpen}>
         <Clock />  {/* Add the Clock component here */}
         <WelcomeMessage>
-          Welcome back, {user ? user.username : 'Senior Officer'}
+          Welcome back, {user ? formatUsername(user.username) : 'Senior Officer'}
         </WelcomeMessage>
         <CurrentTasks>
           <h2>Tasks List</h2>

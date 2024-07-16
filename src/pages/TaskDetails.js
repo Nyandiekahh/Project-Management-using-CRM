@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import DashboardLayout from '../components/DashboardLayout';
 import { Editor } from '@tinymce/tinymce-react';
+import { useAuth } from '../context/AuthProvider'; // Import AuthContext
 
 const TaskDetailsContainer = styled.div`
   max-width: 800px;
@@ -54,6 +55,7 @@ const formatDate = (dateString) => {
 
 const TaskDetails = () => {
   const { taskId } = useParams();
+  const { user } = useAuth(); // Get user from AuthContext
   const [task, setTask] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -133,6 +135,9 @@ const TaskDetails = () => {
     return <div>No task found</div>;
   }
 
+  const assignedOfficers = task.assignedOfficer.split(',').map(officer => officer.trim());
+  const isAssignedToUser = user && assignedOfficers.includes(user.username);
+
   return (
     <DashboardLayout>
       <TaskDetailsContainer>
@@ -166,7 +171,9 @@ const TaskDetails = () => {
             </DocumentContainer>
           ) : 'No completion document uploaded'}
         </TaskDetail>
-        <Button onClick={handleEditorButtonClick}>Start task here</Button>
+        {user && user.role !== 'Deputy Director' && isAssignedToUser && (
+          <Button onClick={handleEditorButtonClick}>Start task here</Button>
+        )}
         {showEditor && (
           <Editor
             apiKey="lz7c3bkxd3jk907smlhgwf1s70yqdbckdjdjdehbg48h5x8y"  // Replace with your TinyMCE API key if needed

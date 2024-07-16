@@ -113,10 +113,61 @@ const DelegateButton = styled.button`
   }
 `;
 
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const ModalContent = styled.div`
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 100%;
+`;
+
+const ModalHeader = styled.div`
+  font-size: 18px;
+  margin-bottom: 20px;
+`;
+
+const ModalBody = styled.div`
+  margin-bottom: 20px;
+`;
+
+const ModalFooter = styled.div`
+  display: flex;
+  justify-content: flex-end;
+`;
+
+const ModalButton = styled.button`
+  padding: 10px 20px;
+  background-color: ${(props) => (props.cancel ? '#e74c3c' : '#3498db')};
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 10px;
+
+  &:hover {
+    background-color: ${(props) => (props.cancel ? '#c0392b' : '#2980b9')};
+  }
+`;
+
 const PrincipalOfficerDashboard = () => {
   const { user } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [taskToDelegate, setTaskToDelegate] = useState(null);
+  const [newOfficer, setNewOfficer] = useState('');
   const navigate = useNavigate();
 
   const toggleSidebar = () => {
@@ -142,8 +193,43 @@ const PrincipalOfficerDashboard = () => {
     navigate(`/tasks/${task.id}`);
   };
 
-  const handleDelegateTask = (taskId) => {
-    // Handle delegation logic here
+  const handleOpenModal = (task) => {
+    setTaskToDelegate(task);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setTaskToDelegate(null);
+    setNewOfficer('');
+  };
+
+  const handleDelegateTask = () => {
+    fetch(`http://localhost:5000/tasks/${taskToDelegate.id}/delegate`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ newOfficer }),
+    })
+      .then(response => response.json())
+      .then(updatedTask => {
+        setTasks(prevTasks => prevTasks.map(t => t.id === updatedTask.id ? updatedTask : t));
+        handleCloseModal();
+      })
+      .catch(error => console.error('Error delegating task:', error));
+  };
+
+  const formatUsername = (username) => {
+    return username
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/([0-9])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase());
+  };
+
+  const isUserAssigned = (assignedOfficer) => {
+    const assignedOfficers = assignedOfficer.split(', ');
+    return assignedOfficers.includes(formatUsername(user.username));
   };
 
   return (
@@ -152,7 +238,7 @@ const PrincipalOfficerDashboard = () => {
       <Content isSidebarOpen={isSidebarOpen}>
         <Clock />  {/* Add the Clock component here */}
         <WelcomeMessage>
-          Welcome back, {user ? user.username : 'Principal Officer'}
+          Welcome back, {user ? formatUsername(user.username) : 'Principal Officer'}
         </WelcomeMessage>
         <CurrentTasks>
           <h2>Tasks List</h2>
@@ -181,8 +267,8 @@ const PrincipalOfficerDashboard = () => {
                       <TaskCell>{task.collaborators && task.collaborators.length > 0 ? task.collaborators.join(', ') : task.assignedOfficer}</TaskCell>
                       <TaskCell>
                         <DelegateButton
-                          onClick={(e) => { e.stopPropagation(); handleDelegateTask(task.id); }}
-                          disabled={task.assignedOfficer !== user.username}
+                          onClick={(e) => { e.stopPropagation(); handleOpenModal(task); }}
+                          disabled={!isUserAssigned(task.assignedOfficer)}
                         >
                           Delegate
                         </DelegateButton>
@@ -199,6 +285,26 @@ const PrincipalOfficerDashboard = () => {
             )}
           </TaskList>
         </CurrentTasks>
+        {isModalOpen && (
+          <ModalOverlay>
+            <ModalContent>
+              <ModalHeader>Delegate Task</ModalHeader>
+              <ModalBody>
+                <label htmlFor="newOfficer">New Officer:</label>
+                <input
+                  type="text"
+                  id="newOfficer"
+                  value={newOfficer}
+                  onChange={(e) => setNewOfficer(e.target.value)}
+                />
+              </ModalBody>
+              <ModalFooter>
+                <ModalButton cancel onClick={handleCloseModal}>Cancel</ModalButton>
+                <ModalButton onClick={handleDelegateTask}>Delegate</ModalButton>
+              </ModalFooter>
+            </ModalContent>
+          </ModalOverlay>
+        )}
       </Content>
     </DashboardContainer>
   );

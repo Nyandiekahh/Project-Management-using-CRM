@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { useAuth } from '../context/AuthProvider'; // Import AuthContext
 
 const TaskListContainer = styled.div`
   width: 100%;
@@ -44,6 +45,7 @@ const Button = styled.button`
 `;
 
 const TaskList = () => {
+  const { user } = useAuth(); // Get user from AuthContext
   const [tasks, setTasks] = useState([]);
 
   useEffect(() => {
@@ -60,6 +62,11 @@ const TaskList = () => {
     setTasks(updatedTasks);
   };
 
+  const delegateTask = (taskId) => {
+    // Implement the logic to delegate the task
+    console.log(`Delegate task with ID: ${taskId}`);
+  };
+
   return (
     <TaskListContainer>
       <h1>Task List</h1>
@@ -74,7 +81,12 @@ const TaskList = () => {
           <TaskDetail><strong>Optional Link:</strong> <a href={task.link} target="_blank" rel="noopener noreferrer">{task.link}</a></TaskDetail>
           <TaskDetail><strong>Assigned By:</strong> {task.assigningOfficer}</TaskDetail>
           <TaskActions>
-            <Button onClick={() => deleteTask(task.id)} delete>Delete</Button>
+            {user && user.role === 'Principal Officer' && task.assignedOfficer.includes(user.username) && (
+              <Button onClick={() => delegateTask(task.id)}>Delegate</Button>
+            )}
+            {user && user.role === 'Deputy Director' && (
+              <Button onClick={() => deleteTask(task.id)} delete>Delete</Button>
+            )}
           </TaskActions>
         </TaskItem>
       ))}

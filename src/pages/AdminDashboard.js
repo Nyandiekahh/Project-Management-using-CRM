@@ -226,13 +226,20 @@ const AdminDashboard = () => {
     navigate(`/tasks/${task.id}`);
   };
 
+  const formatUsername = (username) => {
+    return username
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/([0-9])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase());
+  };
+
   return (
     <DashboardContainer>
       <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
       <Content isSidebarOpen={isSidebarOpen}>
         <Clock />  {/* Add the Clock component here */}
         <WelcomeMessage>
-          Welcome back, {user ? user.username : 'Admin'}
+          Welcome back, {user ? formatUsername(user.username) : 'Admin'}
           <p>We're delighted to have you. Need help on system walk through? Navigate to virtual assistant on the side menu.</p>
         </WelcomeMessage>
         <Button onClick={toggleTaskForm}>
