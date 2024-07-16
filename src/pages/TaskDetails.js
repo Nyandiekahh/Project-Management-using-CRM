@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import DashboardLayout from '../components/DashboardLayout';
 import { Editor } from '@tinymce/tinymce-react';
-import { useAuth } from '../context/AuthProvider'; // Import AuthContext
+import { useAuth } from '../context/AuthProvider';
 
 const TaskDetailsContainer = styled.div`
   max-width: 800px;
@@ -55,11 +55,11 @@ const formatDate = (dateString) => {
 
 const TaskDetails = () => {
   const { taskId } = useParams();
-  const { user } = useAuth(); // Get user from AuthContext
   const [task, setTask] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showEditor, setShowEditor] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     fetch(`http://localhost:5000/tasks/${taskId}`)
@@ -82,45 +82,18 @@ const TaskDetails = () => {
 
   const handleEditorButtonClick = () => {
     setShowEditor(true);
-    const editorWindow = window.open("", "Editor", "width=800,height=600");
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Task Editor</title>
-        <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
-        <script>
-          tinymce.init({
-            selector: '#editor',
-            menubar: true,
-            plugins: 'advlist autolink lists link image charmap print preview anchor searchreplace visualblocks code fullscreen insertdatetime media table paste code help wordcount',
-            toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
-            init_instance_callback: function (editor) {
-              editor.setContent('<p style="color: #888;">Start typing here...</p>');
-            },
-            setup: (editor) => {
-              editor.on('focus', () => {
-                const content = editor.getContent({ format: 'text' });
-                if (content === 'Start typing here...') {
-                  editor.setContent('');
-                }
-              });
-              editor.on('blur', () => {
-                const content = editor.getContent({ format: 'text' });
-                if (content === '') {
-                  editor.setContent('<p style="color: #888;">Start typing here...</p>');
-                }
-              });
-            }
-          });
-        </script>
-      </head>
-      <body>
-        <textarea id="editor"></textarea>
-      </body>
-      </html>
-    `;
-    editorWindow.document.write(htmlContent);
+  };
+
+  const formatUsername = (username) => {
+    return username
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      .replace(/([0-9])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase());
+  };
+
+  const isUserAssigned = (assignedOfficer) => {
+    const assignedOfficers = assignedOfficer.split(', ');
+    return assignedOfficers.includes(formatUsername(user.username));
   };
 
   if (loading) {
@@ -134,9 +107,6 @@ const TaskDetails = () => {
   if (!task) {
     return <div>No task found</div>;
   }
-
-  const assignedOfficers = task.assignedOfficer.split(',').map(officer => officer.trim());
-  const isAssignedToUser = user && assignedOfficers.includes(user.username);
 
   return (
     <DashboardLayout>
@@ -171,7 +141,7 @@ const TaskDetails = () => {
             </DocumentContainer>
           ) : 'No completion document uploaded'}
         </TaskDetail>
-        {user && user.role !== 'Deputy Director' && isAssignedToUser && (
+        {isUserAssigned(task.assignedOfficer) && (
           <Button onClick={handleEditorButtonClick}>Start task here</Button>
         )}
         {showEditor && (
