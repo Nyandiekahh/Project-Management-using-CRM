@@ -2,27 +2,49 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
 import DashboardLayout from '../components/DashboardLayout';
+import { Editor } from '@tinymce/tinymce-react';
 
 const TaskDetailsContainer = styled.div`
   max-width: 800px;
   margin: 0 auto;
-  padding: 20px;
-  background-color: white;
+  padding: 30px;
+  background-color: #f8f9fa;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 `;
 
 const TaskDetailsTitle = styled.h1`
   margin-bottom: 20px;
-  font-size: 24px;
+  font-size: 28px;
+  color: #343a40;
 `;
 
 const TaskDetail = styled.div`
   margin-bottom: 10px;
+  font-size: 16px;
+  color: #495057;
 `;
 
 const DocumentContainer = styled.div`
   margin-top: 20px;
+  border: 1px solid #dee2e6;
+  border-radius: 5px;
+  overflow: hidden;
+  background-color: #ffffff;
+`;
+
+const Button = styled.button`
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+  margin-top: 20px;
+  &:hover {
+    background-color: #0056b3;
+  }
 `;
 
 const formatDate = (dateString) => {
@@ -35,6 +57,7 @@ const TaskDetails = () => {
   const [task, setTask] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showEditor, setShowEditor] = useState(false);
 
   useEffect(() => {
     fetch(`http://localhost:5000/tasks/${taskId}`)
@@ -54,6 +77,49 @@ const TaskDetails = () => {
         setLoading(false);
       });
   }, [taskId]);
+
+  const handleEditorButtonClick = () => {
+    setShowEditor(true);
+    const editorWindow = window.open("", "Editor", "width=800,height=600");
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Task Editor</title>
+        <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
+        <script>
+          tinymce.init({
+            selector: '#editor',
+            menubar: true,
+            plugins: 'advlist autolink lists link image charmap print preview anchor searchreplace visualblocks code fullscreen insertdatetime media table paste code help wordcount',
+            toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+            init_instance_callback: function (editor) {
+              editor.setContent('<p style="color: #888;">Start typing here...</p>');
+            },
+            setup: (editor) => {
+              editor.on('focus', () => {
+                const content = editor.getContent({ format: 'text' });
+                if (content === 'Start typing here...') {
+                  editor.setContent('');
+                }
+              });
+              editor.on('blur', () => {
+                const content = editor.getContent({ format: 'text' });
+                if (content === '') {
+                  editor.setContent('<p style="color: #888;">Start typing here...</p>');
+                }
+              });
+            }
+          });
+        </script>
+      </head>
+      <body>
+        <textarea id="editor"></textarea>
+      </body>
+      </html>
+    `;
+    editorWindow.document.write(htmlContent);
+  };
 
   if (loading) {
     return <div>Loading...</div>;
@@ -100,6 +166,41 @@ const TaskDetails = () => {
             </DocumentContainer>
           ) : 'No completion document uploaded'}
         </TaskDetail>
+        <Button onClick={handleEditorButtonClick}>Start task here</Button>
+        {showEditor && (
+          <Editor
+            apiKey="lz7c3bkxd3jk907smlhgwf1s70yqdbckdjdjdehbg48h5x8y"  // Replace with your TinyMCE API key if needed
+            init={{
+              height: 500,
+              menubar: true,
+              plugins: [
+                'advlist autolink lists link image charmap print preview anchor',
+                'searchreplace visualblocks code fullscreen',
+                'insertdatetime media table paste code help wordcount'
+              ],
+              toolbar: 'undo redo | formatselect | bold italic backcolor | \
+                        alignleft aligncenter alignright alignjustify | \
+                        bullist numlist outdent indent | removeformat | help',
+              setup: (editor) => {
+                editor.on('init', () => {
+                  editor.setContent('<p style="color: #888;">Start typing here...</p>');
+                });
+                editor.on('focus', () => {
+                  const content = editor.getContent({ format: 'text' });
+                  if (content === 'Start typing here...') {
+                    editor.setContent('');
+                  }
+                });
+                editor.on('blur', () => {
+                  const content = editor.getContent({ format: 'text' });
+                  if (content === '') {
+                    editor.setContent('<p style="color: #888;">Start typing here...</p>');
+                  }
+                });
+              }
+            }}
+          />
+        )}
       </TaskDetailsContainer>
     </DashboardLayout>
   );
