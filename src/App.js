@@ -11,6 +11,7 @@ import TaskDetails from './pages/TaskDetails';
 import ProtectedRoute from './components/ProtectedRoute';
 import PrincipalOfficerDashboard from './pages/PrincipalOfficerDashboard';
 import SeniorOfficerDashboard from './pages/SeniorOfficerDashboard';
+import Reports from './pages/Reports';
 
 const App = () => {
   return (
@@ -49,6 +50,10 @@ const App = () => {
           <Route
             path="/senior-officer-dashboard"
             element={<ProtectedRoute component={SeniorOfficerDashboard} role="seniorOfficer" />}
+          />
+          <Route
+            path="/reports"
+            element={<ProtectedRoute component={Reports} />}
           />
           <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>

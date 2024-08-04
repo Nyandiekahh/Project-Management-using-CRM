@@ -7,7 +7,8 @@
     "documentUrl": null,
     "id": 114391,
     "status": "Assigned",
-    "assignedAt": "2024-07-14T06:44:03.842Z"
+    "assignedAt": "2024-07-14T06:44:03.842Z",
+    "progress": "16"
   },
   {
     "name": "Testing for Collaboration",
@@ -69,7 +70,8 @@
     "documentUrl": null,
     "id": 243120,
     "status": "Assigned",
-    "assignedAt": "2024-07-16T00:56:37.993Z"
+    "assignedAt": "2024-07-16T00:56:37.993Z",
+    "progress": "36"
   },
   {
     "name": "sdgvfd ",
@@ -115,5 +117,17 @@
     "id": 683140,
     "status": "Assigned",
     "assignedAt": "2024-07-16T09:29:34.366Z"
+  },
+  {
+    "name": "Testing new",
+    "description": "qwkefjknelc",
+    "deadline": "2024-08-12",
+    "assignedOfficer": "Principal Officer 3",
+    "documentUrl": null,
+    "id": 269281,
+    "status": "Assigned",
+    "assignedAt": "2024-08-04T04:51:50.718Z",
+    "content": "",
+    "progress": 0
   }
 ]
