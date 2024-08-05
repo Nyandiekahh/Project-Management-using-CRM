@@ -87,9 +87,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           <SidebarIcon><FaTachometerAlt /></SidebarIcon>
           <SidebarText isOpen={isOpen}>Dashboard</SidebarText>
         </SidebarLink>
-        <SidebarLink to="/tasks">
+        <SidebarLink to="/my-tasks">
           <SidebarIcon><FaTasks /></SidebarIcon>
-          <SidebarText isOpen={isOpen}>Tasks</SidebarText>
+          <SidebarText isOpen={isOpen}>My Tasks</SidebarText>
         </SidebarLink>
         <SidebarLink to="/user-management">
           <SidebarIcon><FaUser /></SidebarIcon>

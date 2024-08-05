@@ -12,6 +12,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import PrincipalOfficerDashboard from './pages/PrincipalOfficerDashboard';
 import SeniorOfficerDashboard from './pages/SeniorOfficerDashboard';
 import Reports from './pages/Reports';
+import MyTasksPage from './pages/MyTasksPage'; // Ensure this import is correct
 
 const App = () => {
   return (
@@ -34,6 +35,10 @@ const App = () => {
           <Route
             path="/tasks"
             element={<ProtectedRoute component={TaskManagementPage} />}
+          />
+          <Route
+            path="/my-tasks"
+            element={<ProtectedRoute component={MyTasksPage} />}
           />
           <Route
             path="/tasks/:taskId"

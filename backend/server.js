@@ -170,7 +170,7 @@ app.put('/tasks/:id/delegate', async (req, res) => {
     }
 
     // Add the new officer to the assignedOfficer list
-    tasks[taskIndex].assignedOfficer = tasks[taskIndex].assignedOfficer + `, ${newOfficer}`;
+    tasks[taskIndex].assignedOfficer += `, ${newOfficer}`;
     await writeTasksFile(tasks);
     res.json(tasks[taskIndex]);
   } catch (error) {
@@ -188,6 +188,16 @@ app.delete('/tasks/:id', async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: 'Error writing tasks file' });
   }
+});
+
+// Endpoint to get senior officers
+app.get('/senior-officers', async (req, res) => {
+  // Replace this with your actual logic to get senior officers
+  const seniorOfficers = [
+    { id: 1, name: 'Senior Officer 1' },
+    { id: 2, name: 'Senior Officer 2' },
+  ];
+  res.json(seniorOfficers);
 });
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

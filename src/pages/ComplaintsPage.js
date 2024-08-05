@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import ComplaintForm from '../components/ComplaintForm';
 import ComplaintList from '../components/ComplaintList';
 import ComplaintDetails from '../components/ComplaintDetails';
+import DashboardLayout from '../components/DashboardLayout'; // Adjust the import path as needed
 
 const PageContainer = styled.div`
   background-color: #e9ecef;
@@ -40,10 +41,15 @@ const Button = styled.button`
 `;
 
 const ComplaintsPage = () => {
+  const [isOpen, setIsOpen] = useState(true);
   const [complaints, setComplaints] = useState([]);
   const [selectedComplaint, setSelectedComplaint] = useState(null);
   const [comments, setComments] = useState({});
   const [showForm, setShowForm] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsOpen(!isOpen);
+  };
 
   const handleComplaintSubmit = (complaint) => {
     setComplaints([...complaints, { ...complaint, id: complaints.length + 1, status: 'open' }]);
@@ -67,40 +73,42 @@ const ComplaintsPage = () => {
   };
 
   return (
-    <PageContainer>
-      {!showForm && (
-        <Section>
-          <Button onClick={() => setShowForm(true)}>Create and Submit a Complaint</Button>
-        </Section>
-      )}
-      {showForm && (
-        <Section>
-          <ComplaintForm onSubmit={handleComplaintSubmit} />
-        </Section>
-      )}
-      <Section>
-        {complaints.length === 0 ? (
-          <NoComplaintsMessage>
-            There are no complaints to show. All clear!
-          </NoComplaintsMessage>
-        ) : (
-          <ComplaintList
-            complaints={complaints}
-            onComplaintClick={handleComplaintClick}
-            onFilterChange={handleFilterChange}
-          />
+    <DashboardLayout isOpen={isOpen} toggleSidebar={toggleSidebar}>
+      <PageContainer>
+        {!showForm && (
+          <Section>
+            <Button onClick={() => setShowForm(true)}>Create and Submit a Complaint</Button>
+          </Section>
         )}
-      </Section>
-      {selectedComplaint && (
+        {showForm && (
+          <Section>
+            <ComplaintForm onSubmit={handleComplaintSubmit} />
+          </Section>
+        )}
         <Section>
-          <ComplaintDetails
-            complaint={selectedComplaint}
-            comments={comments[selectedComplaint.id] || []}
-            onAddComment={handleAddComment}
-          />
+          {complaints.length === 0 ? (
+            <NoComplaintsMessage>
+              There are no complaints to show. All clear!
+            </NoComplaintsMessage>
+          ) : (
+            <ComplaintList
+              complaints={complaints}
+              onComplaintClick={handleComplaintClick}
+              onFilterChange={handleFilterChange}
+            />
+          )}
         </Section>
-      )}
-    </PageContainer>
+        {selectedComplaint && (
+          <Section>
+            <ComplaintDetails
+              complaint={selectedComplaint}
+              comments={comments[selectedComplaint.id] || []}
+              onAddComment={handleAddComment}
+            />
+          </Section>
+        )}
+      </PageContainer>
+    </DashboardLayout>
   );
 };
 
