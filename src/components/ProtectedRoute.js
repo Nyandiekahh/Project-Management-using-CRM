@@ -1,19 +1,20 @@
+// src/components/ProtectedRoute.js
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthProvider'; // Ensure this path is correct
+import { useAuth } from '../context/AuthProvider';
 
 const ProtectedRoute = ({ component: Component, role, ...rest }) => {
   const { user } = useAuth();
 
-  return user ? (
-    !role || user.role === role ? (
-      <Component {...rest} />
-    ) : (
-      <Navigate to="/login" replace />
-    )
-  ) : (
-    <Navigate to="/login" replace />
-  );
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (role && user.role !== role) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <Component {...rest} />;
 };
 
 export default ProtectedRoute;

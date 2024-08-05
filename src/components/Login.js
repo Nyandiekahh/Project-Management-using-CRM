@@ -1,7 +1,8 @@
+// src/components/Login.js
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthProvider'; // Ensure this path is correct
+import { useAuth } from '../context/AuthProvider';
 
 const LoginContainer = styled.div`
   display: flex;
