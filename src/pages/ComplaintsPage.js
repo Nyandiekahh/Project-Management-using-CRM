@@ -1,115 +1,164 @@
+// src/components/ComplaintForm.js
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import ComplaintForm from '../components/ComplaintForm';
-import ComplaintList from '../components/ComplaintList';
-import ComplaintDetails from '../components/ComplaintDetails';
-import DashboardLayout from '../components/DashboardLayout'; // Adjust the import path as needed
+import DashboardLayout from '../components/DashboardLayout';
 
-const PageContainer = styled.div`
-  background-color: #e9ecef;
-  padding: 20px;
-  min-height: 100vh;
-`;
-
-const NoComplaintsMessage = styled.div`
-  padding: 20px;
-  margin: 20px 0;
-  text-align: center;
+const FormContainer = styled.div`
   background-color: #fff;
+  padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  font-size: 18px;
-  color: #333;
 `;
 
-const Section = styled.div`
-  margin: 20px 0;
+const Input = styled.input`
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+`;
+
+const Textarea = styled.textarea`
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+`;
+
+const Select = styled.select`
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 `;
 
 const Button = styled.button`
-  padding: 10px 20px;
+  padding: 12px 20px;
   background-color: #007bff;
+  color: white;
   border: none;
   border-radius: 4px;
-  font-size: 16px;
-  color: white;
   cursor: pointer;
-  transition: background-color 0.3s ease;
   &:hover {
     background-color: #0056b3;
   }
 `;
 
-const ComplaintsPage = () => {
-  const [isOpen, setIsOpen] = useState(true);
-  const [complaints, setComplaints] = useState([]);
-  const [selectedComplaint, setSelectedComplaint] = useState(null);
-  const [comments, setComments] = useState({});
-  const [showForm, setShowForm] = useState(false);
+const Notification = styled.div`
+  background-color: #28a745;
+  color: white;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
 
-  const toggleSidebar = () => {
-    setIsOpen(!isOpen);
-  };
+const ComplaintForm = ({ onSubmit }) => {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [category, setCategory] = useState('');
+  const [department, setDepartment] = useState('');
+  const [urgency, setUrgency] = useState('');
+  const [document, setDocument] = useState(null);
+  const [notification, setNotification] = useState('');
 
-  const handleComplaintSubmit = (complaint) => {
-    setComplaints([...complaints, { ...complaint, id: complaints.length + 1, status: 'open' }]);
-    setShowForm(false);
-  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  const handleComplaintClick = (id) => {
-    const complaint = complaints.find((comp) => comp.id === id);
-    setSelectedComplaint(complaint);
-  };
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('description', description);
+    formData.append('category', category);
+    formData.append('department', department);
+    formData.append('urgency', urgency);
+    if (document) {
+      formData.append('document', document);
+    }
 
-  const handleAddComment = (id, comment) => {
-    setComments({
-      ...comments,
-      [id]: [...(comments[id] || []), comment],
-    });
-  };
+    try {
+      await fetch('http://localhost:5000/complaints', {
+        method: 'POST',
+        body: formData,
+      });
 
-  const handleFilterChange = (filters) => {
-    // Handle filtering logic here
+      // Display success message
+      setNotification('Complaint submitted successfully');
+
+      // Clear form fields
+      setTitle('');
+      setDescription('');
+      setCategory('');
+      setDepartment('');
+      setUrgency('');
+      setDocument(null);
+
+      // Hide notification after 3 seconds
+      setTimeout(() => setNotification(''), 3000);
+    } catch (error) {
+      console.error('Error submitting complaint:', error);
+    }
   };
 
   return (
-    <DashboardLayout isOpen={isOpen} toggleSidebar={toggleSidebar}>
-      <PageContainer>
-        {!showForm && (
-          <Section>
-            <Button onClick={() => setShowForm(true)}>Create and Submit a Complaint</Button>
-          </Section>
+    <DashboardLayout isOpen={true} toggleSidebar={() => {}}>
+      <FormContainer>
+        <h2>Submit a Complaint</h2>
+        {notification && (
+          <Notification>
+            {notification}
+          </Notification>
         )}
-        {showForm && (
-          <Section>
-            <ComplaintForm onSubmit={handleComplaintSubmit} />
-          </Section>
-        )}
-        <Section>
-          {complaints.length === 0 ? (
-            <NoComplaintsMessage>
-              There are no complaints to show. All clear!
-            </NoComplaintsMessage>
-          ) : (
-            <ComplaintList
-              complaints={complaints}
-              onComplaintClick={handleComplaintClick}
-              onFilterChange={handleFilterChange}
-            />
-          )}
-        </Section>
-        {selectedComplaint && (
-          <Section>
-            <ComplaintDetails
-              complaint={selectedComplaint}
-              comments={comments[selectedComplaint.id] || []}
-              onAddComment={handleAddComment}
-            />
-          </Section>
-        )}
-      </PageContainer>
+        <form onSubmit={handleSubmit}>
+          <Input
+            type="text"
+            placeholder="Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+          />
+          <Textarea
+            placeholder="Description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            required
+          />
+          <Select value={category} onChange={(e) => setCategory(e.target.value)} required>
+            <option value="">Select Category</option>
+            <option value="Salary and Remuneration">Salary and Remuneration</option>
+            <option value="Promotion and Career Progression">Promotion and Career Progression</option>
+            <option value="Work Environment">Work Environment</option>
+            <option value="Performance Management">Performance Management</option>
+            <option value="Organizational Support">Organizational Support</option>
+            <option value="Employee Morale and Engagement">Employee Morale and Engagement</option>
+            <option value="Discrimination and Harassment">Discrimination and Harassment</option>
+            <option value="Communication and Transparency">Communication and Transparency</option>
+          </Select>
+          <Input
+            type="text"
+            placeholder="Department"
+            value={department}
+            onChange={(e) => setDepartment(e.target.value)}
+            required
+          />
+          <Select value={urgency} onChange={(e) => setUrgency(e.target.value)} required>
+            <option value="">Select Urgency Level</option>
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+          </Select>
+          <Input
+            type="file"
+            onChange={(e) => setDocument(e.target.files[0])}
+          />
+          <Button type="submit">Submit</Button>
+        </form>
+      </FormContainer>
     </DashboardLayout>
   );
 };
 
-export default ComplaintsPage;
+export default ComplaintForm;

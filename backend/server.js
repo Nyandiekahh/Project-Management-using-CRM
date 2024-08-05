@@ -14,6 +14,7 @@ app.use(bodyParser.json());
 app.use(cors());
 
 const tasksFilePath = path.join(__dirname, 'tasks.json');
+const complaintsFilePath = path.join(__dirname, 'complaints.json');
 const readFileAsync = promisify(fs.readFile);
 
 // Set up multer for file uploads
@@ -34,30 +35,31 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir);
 }
 
-// Read tasks file with error handling
-async function readTasksFile() {
+// Read file with error handling
+async function readFile(filePath) {
   try {
-    const data = await readFileAsync(tasksFilePath, 'utf8');
+    const data = await readFileAsync(filePath, 'utf8');
     return JSON.parse(data);
   } catch (error) {
     if (error.code === 'ENOENT') {
-      // File doesn't exist, return an empty array
       return [];
     }
     throw error;
   }
 }
 
-// Write tasks file atomically
-async function writeTasksFile(tasks) {
-  await writeFileAtomic(tasksFilePath, JSON.stringify(tasks, null, 2), 'utf8');
+// Write file atomically
+async function writeFile(filePath, data) {
+  await writeFileAtomic(filePath, JSON.stringify(data, null, 2), 'utf8');
 }
 
+// Task routes
 app.get('/tasks', async (req, res) => {
   try {
-    const tasks = await readTasksFile();
+    const tasks = await readFile(tasksFilePath);
     res.json(tasks);
   } catch (error) {
+    console.error('Error reading tasks file:', error);
     res.status(500).json({ error: 'Error reading tasks file' });
   }
 });
@@ -65,7 +67,7 @@ app.get('/tasks', async (req, res) => {
 app.get('/tasks/:id', async (req, res) => {
   const taskId = parseInt(req.params.id, 10);
   try {
-    const tasks = await readTasksFile();
+    const tasks = await readFile(tasksFilePath);
     const task = tasks.find(task => task.id === taskId);
     if (task) {
       res.json(task);
@@ -73,26 +75,28 @@ app.get('/tasks/:id', async (req, res) => {
       res.status(404).json({ error: 'Task not found' });
     }
   } catch (error) {
+    console.error('Error reading tasks file:', error);
     res.status(500).json({ error: 'Error reading tasks file' });
   }
 });
 
 app.post('/tasks', upload.single('document'), async (req, res) => {
   try {
-    const tasks = await readTasksFile();
+    const tasks = await readFile(tasksFilePath);
     const newTask = {
       ...req.body,
       documentUrl: req.file ? `/uploads/${req.file.filename}` : null,
-      id: Math.floor(100000 + Math.random() * 900000), // Generate a unique ID
-      status: 'Assigned', // Ensure status is set to "Assigned"
-      assignedAt: new Date().toISOString(), // Add the current date and time
-      content: '', // Initialize the content field
-      progress: 0 // Initialize progress to 0
+      id: Math.floor(100000 + Math.random() * 900000),
+      status: 'Assigned',
+      assignedAt: new Date().toISOString(),
+      content: '',
+      progress: 0
     };
     tasks.push(newTask);
-    await writeTasksFile(tasks);
-    res.status(201).json(newTask);
+    await writeFile(tasksFilePath, tasks);
+    res.status(201).json({ message: 'Task created successfully', newTask });
   } catch (error) {
+    console.error('Error writing tasks file:', error);
     res.status(500).json({ error: 'Error writing tasks file' });
   }
 });
@@ -100,7 +104,7 @@ app.post('/tasks', upload.single('document'), async (req, res) => {
 app.put('/tasks/:id', upload.single('document'), async (req, res) => {
   const taskId = parseInt(req.params.id, 10);
   try {
-    const tasks = await readTasksFile();
+    const tasks = await readFile(tasksFilePath);
     const taskIndex = tasks.findIndex(task => task.id === taskId);
     if (taskIndex === -1) {
       return res.status(404).json({ error: 'Task not found' });
@@ -113,9 +117,10 @@ app.put('/tasks/:id', upload.single('document'), async (req, res) => {
     };
 
     tasks[taskIndex] = updatedTask;
-    await writeTasksFile(tasks);
-    res.json(updatedTask);
+    await writeFile(tasksFilePath, tasks);
+    res.json({ message: 'Task updated successfully', updatedTask });
   } catch (error) {
+    console.error('Error writing tasks file:', error);
     res.status(500).json({ error: 'Error writing tasks file' });
   }
 });
@@ -125,16 +130,17 @@ app.put('/tasks/:id/save-content', async (req, res) => {
   const { content } = req.body;
 
   try {
-    const tasks = await readTasksFile();
+    const tasks = await readFile(tasksFilePath);
     const taskIndex = tasks.findIndex(task => task.id === taskId);
     if (taskIndex === -1) {
       return res.status(404).json({ error: 'Task not found' });
     }
 
-    tasks[taskIndex].content = content; // Save the editor content
-    await writeTasksFile(tasks);
-    res.json(tasks[taskIndex]);
+    tasks[taskIndex].content = content;
+    await writeFile(tasksFilePath, tasks);
+    res.json({ message: 'Content saved successfully', task: tasks[taskIndex] });
   } catch (error) {
+    console.error('Error writing tasks file:', error);
     res.status(500).json({ error: 'Error writing tasks file' });
   }
 });
@@ -144,16 +150,17 @@ app.put('/tasks/:id/save-progress', async (req, res) => {
   const { progress } = req.body;
 
   try {
-    const tasks = await readTasksFile();
+    const tasks = await readFile(tasksFilePath);
     const taskIndex = tasks.findIndex(task => task.id === taskId);
     if (taskIndex === -1) {
       return res.status(404).json({ error: 'Task not found' });
     }
 
-    tasks[taskIndex].progress = progress; // Save the progress
-    await writeTasksFile(tasks);
-    res.json(tasks[taskIndex]);
+    tasks[taskIndex].progress = progress;
+    await writeFile(tasksFilePath, tasks);
+    res.json({ message: 'Progress saved successfully', task: tasks[taskIndex] });
   } catch (error) {
+    console.error('Error writing tasks file:', error);
     res.status(500).json({ error: 'Error writing tasks file' });
   }
 });
@@ -163,17 +170,17 @@ app.put('/tasks/:id/delegate', async (req, res) => {
   const { newOfficer } = req.body;
 
   try {
-    const tasks = await readTasksFile();
+    const tasks = await readFile(tasksFilePath);
     const taskIndex = tasks.findIndex(task => task.id === taskId);
     if (taskIndex === -1) {
       return res.status(404).json({ error: 'Task not found' });
     }
 
-    // Add the new officer to the assignedOfficer list
     tasks[taskIndex].assignedOfficer += `, ${newOfficer}`;
-    await writeTasksFile(tasks);
-    res.json(tasks[taskIndex]);
+    await writeFile(tasksFilePath, tasks);
+    res.json({ message: 'Task delegated successfully', task: tasks[taskIndex] });
   } catch (error) {
+    console.error('Error writing tasks file:', error);
     res.status(500).json({ error: 'Error writing tasks file' });
   }
 });
@@ -181,23 +188,53 @@ app.put('/tasks/:id/delegate', async (req, res) => {
 app.delete('/tasks/:id', async (req, res) => {
   const taskId = parseInt(req.params.id, 10);
   try {
-    let tasks = await readTasksFile();
+    let tasks = await readFile(tasksFilePath);
     tasks = tasks.filter(task => task.id !== taskId);
-    await writeTasksFile(tasks);
-    res.status(200).json({ message: 'Task deleted' });
+    await writeFile(tasksFilePath, tasks);
+    res.status(200).json({ message: 'Task deleted successfully' });
   } catch (error) {
+    console.error('Error writing tasks file:', error);
     res.status(500).json({ error: 'Error writing tasks file' });
   }
 });
 
 // Endpoint to get senior officers
 app.get('/senior-officers', async (req, res) => {
-  // Replace this with your actual logic to get senior officers
   const seniorOfficers = [
     { id: 1, name: 'Senior Officer 1' },
     { id: 2, name: 'Senior Officer 2' },
   ];
   res.json(seniorOfficers);
+});
+
+// Complaint routes
+app.get('/complaints', async (req, res) => {
+  try {
+    const complaints = await readFile(complaintsFilePath);
+    res.json(complaints);
+  } catch (error) {
+    console.error('Error reading complaints file:', error);
+    res.status(500).json({ error: 'Error reading complaints file' });
+  }
+});
+
+app.post('/complaints', upload.single('document'), async (req, res) => {
+  try {
+    const complaints = await readFile(complaintsFilePath);
+    const newComplaint = {
+      ...req.body,
+      documentUrl: req.file ? `/uploads/${req.file.filename}` : null,
+      id: Math.floor(100000 + Math.random() * 900000),
+      status: 'Open',
+      createdAt: new Date().toISOString(),
+    };
+    complaints.push(newComplaint);
+    await writeFile(complaintsFilePath, complaints);
+    res.status(201).json({ message: 'Complaint submitted successfully', newComplaint });
+  } catch (error) {
+    console.error('Error writing complaints file:', error);
+    res.status(500).json({ error: 'Error writing complaints file' });
+  }
 });
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

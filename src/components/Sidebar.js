@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { FaTachometerAlt, FaTasks, FaUser, FaQuestionCircle, FaFileAlt, FaClipboardList, FaBars, FaSignOutAlt } from 'react-icons/fa';
+import { FaTachometerAlt, FaTasks, FaQuestionCircle, FaFileAlt, FaClipboardList, FaBars, FaSignOutAlt } from 'react-icons/fa';
 
 const SidebarContainer = styled.div`
   width: ${props => (props.isOpen ? '250px' : '60px')};
@@ -91,10 +91,10 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           <SidebarIcon><FaTasks /></SidebarIcon>
           <SidebarText isOpen={isOpen}>My Tasks</SidebarText>
         </SidebarLink>
-        <SidebarLink to="/user-management">
+        {/* <SidebarLink to="/user-management">
           <SidebarIcon><FaUser /></SidebarIcon>
           <SidebarText isOpen={isOpen}>User Management</SidebarText>
-        </SidebarLink>
+        </SidebarLink> */}
         <SidebarLink to="/faqs">
           <SidebarIcon><FaQuestionCircle /></SidebarIcon>
           <SidebarText isOpen={isOpen}>FAQs</SidebarText>

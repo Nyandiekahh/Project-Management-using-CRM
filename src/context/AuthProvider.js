@@ -12,7 +12,6 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Mock authentication check
     const loggedInUser = JSON.parse(localStorage.getItem('user'));
     if (loggedInUser) {
       setUser(loggedInUser);
