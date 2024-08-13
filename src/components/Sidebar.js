@@ -95,10 +95,10 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           <SidebarIcon><FaUser /></SidebarIcon>
           <SidebarText isOpen={isOpen}>User Management</SidebarText>
         </SidebarLink> */}
-        <SidebarLink to="/faqs">
+        {/* <SidebarLink to="/faqs">
           <SidebarIcon><FaQuestionCircle /></SidebarIcon>
           <SidebarText isOpen={isOpen}>FAQs</SidebarText>
-        </SidebarLink>
+        </SidebarLink> */}
         <SidebarLink to="/complaints">
           <SidebarIcon><FaClipboardList /></SidebarIcon>
           <SidebarText isOpen={isOpen}>Complaints</SidebarText>
