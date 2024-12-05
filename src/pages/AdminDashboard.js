@@ -13,9 +13,15 @@ import {
   Edit2,
   Trash2,
   Plus,
-  CheckCircle
+  CheckCircle,
+  Search,
+  Filter,
+  ChevronDown,
+  Download,
+  Calendar
 } from 'lucide-react';
 
+// Styled Components
 const DashboardContainer = styled.div`
   display: flex;
   min-height: 100vh;
@@ -28,6 +34,7 @@ const Content = styled.div`
   background-color: #f8fafc;
   margin-left: ${props => (props.isSidebarOpen ? '250px' : '60px')};
   transition: margin-left 0.3s;
+  position: relative;
 
   @media (max-width: 768px) {
     margin-left: 0;
@@ -35,25 +42,95 @@ const Content = styled.div`
   }
 `;
 
-const WelcomeMessage = styled.div`
-  font-size: 28px;
+const TopSection = styled.div`
   margin-bottom: 30px;
+`;
+
+const WelcomeMessage = styled.div`
+  font-size: 32px;
   color: #1e293b;
   font-weight: 600;
+  margin-bottom: 10px;
 
   p {
     font-size: 16px;
     color: #64748b;
     margin-top: 8px;
     font-weight: normal;
+    line-height: 1.5;
+  }
+`;
+
+const SearchSection = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+`;
+
+const SearchBar = styled.div`
+  flex: 1;
+  position: relative;
+  max-width: 500px;
+
+  @media (max-width: 768px) {
+    max-width: 100%;
+  }
+`;
+
+const SearchInput = styled.input`
+  width: 100%;
+  padding: 12px 16px 12px 40px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 16px;
+  color: #1e293b;
+  transition: all 0.2s;
+
+  &:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+`;
+
+const SearchIcon = styled(Search)`
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+`;
+
+const FilterButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background-color: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  color: #64748b;
+  font-size: 16px;
+  font-weight: 500;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #f8fafc;
+    border-color: #cbd5e1;
   }
 `;
 
 const StatsGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(1, 1fr);
-  gap: 20px;
-  margin-bottom: 30px;
+  gap: 24px;
+  margin: 30px 0;
 
   @media (min-width: 640px) {
     grid-template-columns: repeat(2, 1fr);
@@ -67,12 +144,14 @@ const StatsGrid = styled.div`
 const StatCard = styled.div`
   background-color: white;
   padding: 24px;
-  border-radius: 12px;
+  border-radius: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s;
+  transition: all 0.3s;
 
   &:hover {
-    transform: translateY(-2px);
+    transform: translateY(-4px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                0 2px 4px -1px rgba(0, 0, 0, 0.06);
   }
 `;
 
@@ -84,44 +163,105 @@ const StatHeader = styled.div`
 `;
 
 const StatTitle = styled.h3`
-  font-size: 16px;
+  font-size: 18px;
   color: #64748b;
   font-weight: 500;
 `;
 
 const StatIcon = styled.div`
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: 16px;
   background-color: ${props => props.bg || '#e2e8f0'};
   color: ${props => props.color || '#64748b'};
 `;
 
 const StatValue = styled.div`
-  font-size: 32px;
-  font-weight: 600;
+  font-size: 36px;
+  font-weight: 700;
   color: #1e293b;
+  margin: 8px 0;
 `;
 
 const StatChange = styled.div`
   font-size: 14px;
   color: ${props => props.increase ? '#10b981' : '#64748b'};
-  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  &::before {
+    content: ${props => props.increase ? '"↑"' : '""'};
+  }
+`;
+
+const ActionsBar = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 12px;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    justify-content: stretch;
+  }
+`;
+
+const Button = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 500;
+  color: white;
+  background-color: ${props => props.variant === 'secondary' ? '#64748b' : '#3b82f6'};
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: ${props => props.fullWidth ? '100%' : 'auto'};
+
+  &:hover {
+    background-color: ${props => props.variant === 'secondary' ? '#475569' : '#2563eb'};
+  }
+
+  @media (max-width: 768px) {
+    flex: 1;
+  }
 `;
 
 const TasksContainer = styled.div`
   background-color: white;
-  padding: 24px;
-  border-radius: 12px;
+  border-radius: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+`;
+
+const TasksHeader = styled.div`
+  padding: 24px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
 `;
 
 const TaskTableWrapper = styled.div`
   overflow-x: auto;
-  margin-top: 20px;
+  min-height: 400px;
 `;
 
 const TaskTable = styled.table`
@@ -139,27 +279,52 @@ const TaskTableHeader = styled.th`
   font-weight: 600;
   border-bottom: 2px solid #e2e8f0;
   white-space: nowrap;
+
+  &:first-child {
+    padding-left: 24px;
+  }
+
+  &:last-child {
+    padding-right: 24px;
+  }
 `;
 
 const TaskRow = styled.tr`
+  cursor: pointer;
+  transition: all 0.2s;
+
   &:hover {
     background-color: #f8fafc;
   }
-  cursor: pointer;
+
+  &:last-child td {
+    border-bottom: none;
+  }
 `;
 
 const TaskCell = styled.td`
   padding: 16px;
   border-bottom: 1px solid #e2e8f0;
   color: #1e293b;
+  vertical-align: middle;
+
+  &:first-child {
+    padding-left: 24px;
+  }
+
+  &:last-child {
+    padding-right: 24px;
+  }
 `;
 
 const StatusBadge = styled.span`
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 8px 16px;
   border-radius: 9999px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   background-color: ${props => {
     switch (props.status) {
       case 'Not Done': return '#fee2e2';
@@ -180,26 +345,6 @@ const StatusBadge = styled.span`
   }};
 `;
 
-const Button = styled.button`
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
-  font-size: 16px;
-  font-weight: 500;
-  color: white;
-  background-color: #3b82f6;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-bottom: 20px;
-
-  &:hover {
-    background-color: #2563eb;
-  }
-`;
-
 const ActionButton = styled.button`
   display: inline-flex;
   align-items: center;
@@ -217,44 +362,88 @@ const ActionButton = styled.button`
 
   &:hover {
     background-color: ${props => props.variant === 'edit' ? '#059669' : '#dc2626'};
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
   }
 `;
 
 const NoTasksMessage = styled.div`
   text-align: center;
   padding: 48px 20px;
-  font-size: 20px;
   color: #64748b;
+
+  h3 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #1e293b;
+  }
+
+  p {
+    font-size: 16px;
+    margin-bottom: 24px;
+  }
 
   img {
     margin-top: 24px;
     width: 100%;
     max-width: 300px;
     border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   }
+`;
+
+const LoadingSpinner = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  color: #3b82f6;
 `;
 
 const AdminDashboard = () => {
   const { user } = useAuth();
   const [tasks, setTasks] = useState([]);
+  const [filteredTasks, setFilteredTasks] = useState([]);
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch('http://localhost:5000/tasks')
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok ' + response.statusText);
-        }
-        return response.json();
-      })
-      .then(data => {
-        setTasks(data);
-      })
-      .catch(error => console.error('Error fetching tasks:', error));
+    fetchTasks();
   }, []);
+
+  useEffect(() => {
+    if (tasks.length > 0) {
+      const filtered = tasks.filter(task => 
+        task.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        task.assignedOfficer.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredTasks(filtered);
+    }
+  }, [searchTerm, tasks]);
+
+  const fetchTasks = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/tasks');
+      if (!response.ok) {
+        throw new Error('Failed to fetch tasks');
+      }
+      const data = await response.json();
+      setTasks(data);
+      setFilteredTasks(data);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      setIsLoading(false);
+    }
+  };
 
   const calculateStats = () => {
     const total = tasks.length;
@@ -271,10 +460,11 @@ const AdminDashboard = () => {
     };
   };
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!isSidebarOpen);
-  };
+  const stats = calculateStats();
 
+  // Existing functions remain the same
+  const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
+  
   const handleCreateTask = (task) => {
     const formData = new FormData();
     formData.append('name', task.name);
@@ -286,26 +476,23 @@ const AdminDashboard = () => {
     }
 
     if (task.id) {
-      // If task ID exists, update the existing task
       fetch(`http://localhost:5000/tasks/${task.id}`, {
         method: 'PUT',
         body: formData
       })
         .then(response => response.json())
         .then(updatedTask => {
-          setTasks(prevTasks => prevTasks.map(t => 
-            t.id === updatedTask.id ? updatedTask : t
-          ));
+          setTasks(prevTasks => 
+            prevTasks.map(t => t.id === updatedTask.id ? updatedTask : t)
+          );
           setShowTaskForm(false);
           setEditingTask(null);
         })
         .catch(error => console.error('Error updating task:', error));
     } else {
-      // If no task ID, create a new task
       fetch('http://localhost:5000/tasks', {
         method: 'POST',
-        body: formData
-      })
+        body: formData})
         .then(response => response.json())
         .then(data => {
           setTasks(prevTasks => [...prevTasks, data]);
@@ -354,18 +541,41 @@ const AdminDashboard = () => {
       ?.replace(/^./, str => str.toUpperCase());
   };
 
-  const stats = calculateStats();
-
   return (
     <DashboardContainer>
       <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
       <Content isSidebarOpen={isSidebarOpen}>
-        <Clock />
-        
-        <WelcomeMessage>
-          Welcome back, {user ? formatUsername(user.username) : 'Admin'}
-          <p>We're delighted to have you. Need help with the system? Navigate to virtual assistant on the side menu.</p>
-        </WelcomeMessage>
+        <TopSection>
+          <Clock />
+          
+          <WelcomeMessage>
+            Welcome back, {user ? formatUsername(user.username) : 'Admin'}
+            <p>We're delighted to have you. Need help with the system? Navigate to virtual assistant on the side menu.</p>
+          </WelcomeMessage>
+
+          <SearchSection>
+            <SearchBar>
+              <SearchIcon size={20} />
+              <SearchInput
+                type="text"
+                placeholder="Search tasks by name or assigned officer..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </SearchBar>
+            <ButtonGroup>
+              <FilterButton>
+                <Filter size={20} />
+                Filter
+                <ChevronDown size={16} />
+              </FilterButton>
+              <Button variant="secondary">
+                <Download size={20} />
+                Export
+              </Button>
+            </ButtonGroup>
+          </SearchSection>
+        </TopSection>
 
         <StatsGrid>
           <StatCard>
@@ -438,12 +648,16 @@ const AdminDashboard = () => {
         )}
 
         <TasksContainer>
-          <h2 style={{ fontSize: '24px', fontWeight: '600', color: '#1e293b', marginBottom: '20px' }}>
-            Tasks List
-          </h2>
+          <TasksHeader>
+            <h2 style={{ fontSize: '24px', fontWeight: '600', color: '#1e293b' }}>
+              Tasks List
+            </h2>
+          </TasksHeader>
 
           <TaskTableWrapper>
-            {tasks.length > 0 ? (
+            {isLoading ? (
+              <LoadingSpinner>Loading tasks...</LoadingSpinner>
+            ) : filteredTasks.length > 0 ? (
               <TaskTable>
                 <thead>
                   <tr>
@@ -457,7 +671,7 @@ const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                {tasks.map((task, index) => (
+                  {filteredTasks.map((task, index) => (
                     <TaskRow 
                       key={task.id} 
                       onClick={() => handleTaskClick(task)}
@@ -504,11 +718,14 @@ const AdminDashboard = () => {
               </TaskTable>
             ) : (
               <NoTasksMessage>
-                <div>Hooray! No pending task.</div>
-                <img 
-                  src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExbTFiNzVicXh1dHp2aWd3YnE4amZjcnIzdWl2NnBmY3h4engyOTN6ZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/26ufnwz3wDUli7GU0/giphy.webp" 
-                  alt="No tasks" 
-                />
+                <h3>No Tasks Found</h3>
+                <p>There are no tasks matching your search criteria.</p>
+                {!searchTerm && (
+                  <img 
+                    src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExbTFiNzVicXh1dHp2aWd3YnE4amZjcnIzdWl2NnBmY3h4engyOTN6ZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/26ufnwz3wDUli7GU0/giphy.webp" 
+                    alt="No tasks" 
+                  />
+                )}
               </NoTasksMessage>
             )}
           </TaskTableWrapper>
