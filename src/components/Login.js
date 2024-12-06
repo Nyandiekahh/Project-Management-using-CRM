@@ -1,71 +1,16 @@
-// src/components/Login.js
+// Login.js
 import React, { useState } from 'react';
-import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthProvider';
-
-const LoginContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-  background-color: #f5f5f5;
-`;
-
-const Form = styled.form`
-  display: flex;
-  flex-direction: column;
-  width: 300px;
-  padding: 20px;
-  background-color: white;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  border-radius: 10px;
-  font-size: 18px;
-`;
-
-const Input = styled.input`
-  margin-bottom: 20px;
-  padding: 12px;
-  font-size: 18px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-`;
-
-const Button = styled.button`
-  padding: 12px;
-  font-size: 18px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  &:hover {
-    background-color: #0056b3;
-  }
-`;
-
-const PasswordContainer = styled.div`
-  display: flex;
-  align-items: center;
-`;
-
-const ToggleButton = styled.button`
-  margin-left: 10px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 18px;
-  color: #007bff;
-  &:hover {
-    color: #0056b3;
-  }
-`;
+import { Eye, EyeOff, Lock, User, AlertCircle } from 'lucide-react';
+import './Login.css';
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -80,46 +25,122 @@ const Login = () => {
     seniorOfficer2: { username: 'seniorOfficer2', password: 'so123', navigateTo: '/senior-officer-dashboard', role: 'seniorOfficer' },
     seniorOfficer3: { username: 'seniorOfficer3', password: 'so123', navigateTo: '/senior-officer-dashboard', role: 'seniorOfficer' },
     seniorOfficer4: { username: 'seniorOfficer4', password: 'so123', navigateTo: '/senior-officer-dashboard', role: 'seniorOfficer' },
-    seniorOfficer5: { username: 'seniorOfficer5', password: 'so123', navigateTo: '/senior-officer-dashboard', role: 'seniorOfficer' },
+    seniorOfficer5: { username: 'seniorOfficer5', password: 'so123', navigateTo: '/senior-officer-dashboard', role: 'seniorOfficer' }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setIsLoading(true);
 
-    const user = Object.values(credentials).find(user => user.username === username && user.password === password);
+    try {
+      const user = Object.values(credentials).find(
+        user => user.username === username && user.password === password
+      );
 
-    if (user) {
-      login(user.username, user.role);
-      navigate(user.navigateTo);
-    } else {
-      alert('Invalid credentials');
+      if (user) {
+        await login(user.username, user.role);
+        navigate(user.navigateTo);
+      } else {
+        setError('Invalid credentials. Please try again.');
+      }
+    } catch (err) {
+      setError('An error occurred. Please try again later.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <LoginContainer>
-      <h2>Login</h2>
-      <Form onSubmit={handleSubmit}>
-        <Input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
-        <PasswordContainer>
-          <Input
-            type={showPassword ? 'text' : 'password'}
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <ToggleButton type="button" onClick={() => setShowPassword(!showPassword)}>
-            {showPassword ? 'Hide' : 'Show'}
-          </ToggleButton>
-        </PasswordContainer>
-        <Button type="submit">Login</Button>
-      </Form>
-    </LoginContainer>
+    <div className="login-container">
+      <div className="login-left">
+        <div className="animated-background">
+          <div className="gradient-overlay"></div>
+          <div className="content-overlay">
+            <h1>Project Management System</h1>
+            <p>Streamline your workflow. Enhance productivity.</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="login-right">
+        <div className="login-form-container">
+          <div className="login-header">
+            <div className="logo-container">
+              <div className="logo-circle"></div>
+              <h2>Login Portal</h2>
+            </div>
+            {error && (
+              <div className="error-alert">
+                <AlertCircle />
+                <span>{error}</span>
+              </div>
+            )}
+          </div>
+
+          <form onSubmit={handleSubmit} className="modern-form">
+            <div className="form-field">
+              <div className="input-wrapper">
+                <User className="field-icon" />
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  placeholder="Username"
+                />
+                <div className="input-focus-effect"></div>
+              </div>
+            </div>
+
+            <div className="form-field">
+              <div className="input-wrapper">
+                <Lock className="field-icon" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  placeholder="Password"
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff /> : <Eye />}
+                </button>
+                <div className="input-focus-effect"></div>
+              </div>
+            </div>
+
+            <div className="form-options">
+              <label className="checkbox-container">
+                <input type="checkbox" />
+                <span className="checkmark"></span>
+                Remember me
+              </label>
+              <button type="button" className="forgot-link">
+                Forgot password?
+              </button>
+            </div>
+
+            <button 
+              type="submit" 
+              className={`submit-btn ${isLoading ? 'loading' : ''}`}
+              disabled={isLoading}
+            >
+              <span className="btn-text">{isLoading ? 'Signing in...' : 'Sign in'}</span>
+              <span className="btn-loader"></span>
+            </button>
+          </form>
+
+          <div className="support-section">
+            <p>Need help? <button className="support-btn">Contact IT Support</button></p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
