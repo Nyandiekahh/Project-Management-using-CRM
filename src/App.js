@@ -41,7 +41,7 @@ const App = () => {
             element={<ProtectedRoute component={MyTasksPage} />}
           />
           <Route
-            path="/tasks/:taskId"
+            path="/task/:taskId"
             element={<ProtectedRoute component={TaskDetails} />}
           />
           <Route

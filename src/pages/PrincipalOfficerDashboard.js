@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import Sidebar from '../components/Sidebar';
 import Clock from '../components/Clock';
-import Select from 'react-select'; // Added this import
+import ClickableTask from '../components/ClickableTask';
 
 import { 
   ClipboardList, 
@@ -12,14 +12,12 @@ import {
   Users,
   AlertTriangle,
   Search,
-  Download,
-  Filter,
-  UserPlus,
+  Calendar,
+  Activity,
+  BarChart,
+  Bell,
   ChevronDown,
-  Bell
 } from 'lucide-react';
-
-// Styled Components
 
 const DashboardContainer = styled.div`
   display: flex;
@@ -97,44 +95,12 @@ const SearchInput = styled.input`
   }
 `;
 
-const SearchIcon = styled(Search)`
+const SearchIcon = styled.div`
   position: absolute;
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
   color: #64748b;
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 12px;
-
-  @media (max-width: 768px) {
-    width: 100%;
-  }
-`;
-
-const Button = styled.button`
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
-  font-size: 16px;
-  font-weight: 500;
-  color: ${props => props.variant === 'secondary' ? '#64748b' : 'white'};
-  background-color: ${props => props.variant === 'secondary' ? 'white' : '#3b82f6'};
-  border: ${props => props.variant === 'secondary' ? '1px solid #e2e8f0' : 'none'};
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    background-color: ${props => props.variant === 'secondary' ? '#f8fafc' : '#2563eb'};
-  }
-
-  @media (max-width: 768px) {
-    flex: 1;
-  }
 `;
 
 const StatsGrid = styled.div`
@@ -209,224 +175,117 @@ const StatChange = styled.div`
   }
 `;
 
-const TasksContainer = styled.div`
-  background-color: white;
+const ActivityFeed = styled.div`
+  background: white;
   border-radius: 16px;
+  padding: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-`;
+  margin-top: 24px;
 
-const TasksHeader = styled.div`
-  padding: 24px;
-  border-bottom: 1px solid #e2e8f0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
-
-const TaskTableWrapper = styled.div`
-  overflow-x: auto;
-`;
-
-const TaskTable = styled.table`
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  font-size: 16px;
-`;
-
-const TaskTableHeader = styled.th`
-  background-color: #f8fafc;
-  color: #475569;
-  padding: 16px;
-  text-align: left;
-  font-weight: 600;
-  border-bottom: 2px solid #e2e8f0;
-  white-space: nowrap;
-
-  &:first-child {
-    padding-left: 24px;
+  h2 {
+    font-size: 20px;
+    color: #1e293b;
+    margin-bottom: 16px;
+    font-weight: 600;
   }
+`;
+
+const ActivityItem = styled.div`
+  display: flex;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid #e2e8f0;
 
   &:last-child {
-    padding-right: 24px;
-  }
-`;
-
-const TaskRow = styled.tr`
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    background-color: #f8fafc;
-  }
-
-  &:last-child td {
     border-bottom: none;
   }
 `;
 
-const TaskCell = styled.td`
-  padding: 16px;
-  border-bottom: 1px solid #e2e8f0;
-  color: #1e293b;
-  vertical-align: middle;
-
-  &:first-child {
-    padding-left: 24px;
-  }
-
-  &:last-child {
-    padding-right: 24px;
-  }
+const ActivityIcon = styled.div`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #dbeafe;
+  color: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  flex-shrink: 0;
 `;
 
-const StatusBadge = styled.span`
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border-radius: 9999px;
-  font-size: 14px;
-  font-weight: 600;
-  background-color: ${props => {
-    switch (props.status) {
-      case 'Not Done': return '#fee2e2';
-      case 'Pending': return '#fef3c7';
-      case 'Completed': return '#dcfce7';
-      case 'Assigned': return '#dbeafe';
-      default: return '#f1f5f9';
-    }
-  }};
-  color: ${props => {
-    switch (props.status) {
-      case 'Not Done': return '#991b1b';
-      case 'Pending': return '#92400e';
-      case 'Completed': return '#166534';
-      case 'Assigned': return '#1e40af';
-      default: return '#475569';
-    }
-  }};
+const ActivityContent = styled.div`
+  flex: 1;
 `;
 
-const DelegateButton = styled.button`
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background-color: ${props => props.disabled ? '#cbd5e1' : '#f59e0b'};
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
+const ActivityTitle = styled.div`
   font-weight: 500;
-  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
-  transition: all 0.2s;
+  color: #1e293b;
+  margin-bottom: 4px;
+`;
 
-  &:hover:not(:disabled) {
-    background-color: #d97706;
-    transform: translateY(-1px);
-  }
+const ActivityTime = styled.div`
+  font-size: 14px;
+  color: #64748b;
+`;
 
-  &:active:not(:disabled) {
-    transform: translateY(0);
+const DeadlineTimeline = styled.div`
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-top: 24px;
+
+  h2 {
+    font-size: 20px;
+    color: #1e293b;
+    margin-bottom: 16px;
+    font-weight: 600;
   }
 `;
 
-const Modal = {
-  Overlay: styled.div`
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 50;
-  `,
-  Content: styled.div`
-    background: white;
-    padding: 32px;
-    border-radius: 16px;
-    max-width: 500px;
-    width: 90%;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
-                0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  `,
-  Header: styled.div`
-    font-size: 24px;
-    font-weight: 600;
-    color: #1e293b;
-    margin-bottom: 24px;
-  `,
-  Body: styled.div`
-    margin-bottom: 32px;
+const TimelineItem = styled.div`
+  display: flex;
+  padding: 16px 0;
+  border-left: 2px solid #e2e8f0;
+  margin-left: 16px;
+  position: relative;
 
-    label {
-      display: block;
-      font-size: 14px;
-      font-weight: 500;
-      color: #64748b;
-      margin-bottom: 8px;
-    }
+  &:before {
+    content: '';
+    position: absolute;
+    left: -5px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #3b82f6;
+  }
 
-    .select-container {
-      margin-top: 8px;
-    }
-  `,
-  Footer: styled.div`
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-  `,
-  Button: styled.button`
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-size: 14px;
+  .content {
+    margin-left: 20px;
+  }
+
+  .task-name {
     font-weight: 500;
-    color: white;
-    background-color: ${props => props.variant === 'cancel' ? '#ef4444' : '#3b82f6'};
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
-
-    &:hover {
-      background-color: ${props => props.variant === 'cancel' ? '#dc2626' : '#2563eb'};
-    }
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-  `
-};
-
-const NoTasksMessage = styled.div`
-  text-align: center;
-  padding: 48px 20px;
-  color: #64748b;
-
-  h3 {
-    font-size: 24px;
-    font-weight: 600;
-    margin-bottom: 12px;
     color: #1e293b;
+    margin-bottom: 4px;
   }
 
-  p {
-    font-size: 16px;
-    margin-bottom: 24px;
+  .date {
+    font-size: 14px;
+    color: #64748b;
   }
+`;
 
-  img {
-    margin-top: 24px;
-    width: 100%;
-    max-width: 300px;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  }
+const ErrorMessage = styled.div`
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 `;
 
 const LoadingSpinner = styled.div`
@@ -435,139 +294,86 @@ const LoadingSpinner = styled.div`
   align-items: center;
   min-height: 200px;
   color: #3b82f6;
+  font-size: 16px;
 `;
 
-// Main Component
 const PrincipalOfficerDashboard = () => {
   const { user } = useAuth();
-  const [tasks, setTasks] = useState([]);
-  const [filteredTasks, setFilteredTasks] = useState([]);
-  const [isSidebarOpen, setSidebarOpen] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [taskToDelegate, setTaskToDelegate] = useState(null);
-  const [seniorOfficers, setSeniorOfficers] = useState([]);
-  const [selectedOfficer, setSelectedOfficer] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [isDelegating, setIsDelegating] = useState(false);
   const navigate = useNavigate();
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [dashboardData, setDashboardData] = useState({
+    stats: {
+      totalTasks: 0,
+      teamMembers: 0,
+      completedTasks: 0,
+      pendingReview: 0
+    },
+    recentActivities: [],
+    upcomingDeadlines: []
+  });
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    fetchTasks();
-    fetchSeniorOfficers();
-  }, []);
+    fetchDashboardData();
+  }, [user]);
 
-  useEffect(() => {
-    if (tasks.length > 0) {
-      const filtered = tasks.filter(task => 
-        task.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        task.assignedOfficer.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredTasks(filtered);
+  // Modified fetchDashboardData function
+const fetchDashboardData = async () => {
+  try {
+    setIsLoading(true);
+    // Only fetch tasks since that's what exists in your backend
+    const response = await fetch('http://localhost:5000/tasks');
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch dashboard data');
     }
-  }, [searchTerm, tasks]);
 
+    const tasksData = await response.json();
 
-  const fetchSeniorOfficers = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/officers/senior');
-      if (!response.ok) {
-        throw new Error('Failed to fetch senior officers');
-      }
-      const data = await response.json();
-      setSeniorOfficers(data.map(officer => ({
-        value: officer.id,
-        label: officer.name
-      })));
-    } catch (error) {
-      console.error('Error fetching senior officers:', error);
-    }
-  };
+    // Filter tasks for current PO
+    const userTasks = tasksData.filter(task => {
+      const assignees = task.assignedOfficer?.split(', ') || [];
+      return assignees.includes(user.username);
+    });
 
-
-
-  const fetchTasks = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/tasks');
-      if (!response.ok) {
-        throw new Error('Failed to fetch tasks');
-      }
-      const data = await response.json();
-      setTasks(data);
-      setFilteredTasks(data);
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Error fetching tasks:', error);
-      setIsLoading(false);
-    }
-  };
-
-  const calculateStats = () => {
-    const total = tasks.length;
-    const assigned = tasks.filter(task => task.status === 'Assigned').length;
-    const completed = tasks.filter(task => task.status === 'Completed').length;
-    const pending = tasks.filter(task => task.status === 'Pending').length;
-    
-    return {
-      total,
-      assigned,
-      completed,
-      pending,
-      completionRate: total ? ((completed / total) * 100).toFixed(1) : 0
+    // Calculate statistics
+    const stats = {
+      totalTasks: userTasks.length,
+      teamMembers: new Set(userTasks.map(task => task.assignedOfficer)).size,
+      completedTasks: userTasks.filter(task => task.status === 'Completed').length,
+      pendingReview: userTasks.filter(task => task.status === 'Pending Review').length
     };
-  };
+
+    // Get activities from tasks
+    const recentActivities = userTasks.map(task => ({
+      taskId: task.id, // Add this line
+      description: `Task "${task.name}" - ${task.status}`,
+      timestamp: task.deadline
+    })).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 5);
+    
+    // Get upcoming deadlines from tasks
+    const upcomingDeadlines = userTasks
+      .filter(task => new Date(task.deadline) > new Date())
+      .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
+      .slice(0, 5);
+
+    setDashboardData({
+      stats,
+      recentActivities,
+      upcomingDeadlines
+    });
+  } catch (err) {
+    setError('Failed to load dashboard data. Please try again later.');
+    console.error('Error fetching dashboard data:', err);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const toggleSidebar = () => {
     setSidebarOpen(!isSidebarOpen);
-  };
-
-  const handleTaskClick = (task) => {
-    navigate(`/tasks/${task.id}`);
-  };
-
-  const handleOpenModal = (task) => {
-    setTaskToDelegate(task);
-    setSelectedOfficer(null);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setTaskToDelegate(null);
-    setSelectedOfficer(null);
-    setIsDelegating(false);
-  };
-
-  const handleDelegateTask = async () => {
-    if (!selectedOfficer) return;
-    
-    setIsDelegating(true);
-    try {
-      const response = await fetch(`http://localhost:5000/tasks/${taskToDelegate.id}/delegate`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          newOfficerId: selectedOfficer.value,
-          newOfficerName: selectedOfficer.label
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delegate task');
-      }
-
-      const updatedTask = await response.json();
-      setTasks(prevTasks => 
-        prevTasks.map(t => t.id === updatedTask.id ? updatedTask : t)
-      );
-      handleCloseModal();
-    } catch (error) {
-      console.error('Error delegating task:', error);
-    } finally {
-      setIsDelegating(false);
-    }
   };
 
   const formatUsername = (username) => {
@@ -577,28 +383,40 @@ const PrincipalOfficerDashboard = () => {
       ?.replace(/^./, str => str.toUpperCase());
   };
 
-  const isUserAssigned = (assignedOfficer) => {
-    const assignedOfficers = assignedOfficer.split(', ');
-    return assignedOfficers.includes(formatUsername(user?.username));
-  };
-
-  const stats = calculateStats();
+  if (isLoading) {
+    return (
+      <DashboardContainer>
+        <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+        <Content isSidebarOpen={isSidebarOpen}>
+          <LoadingSpinner>Loading dashboard data...</LoadingSpinner>
+        </Content>
+      </DashboardContainer>
+    );
+  }
 
   return (
     <DashboardContainer>
       <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
       <Content isSidebarOpen={isSidebarOpen}>
+        {error && (
+          <ErrorMessage>
+            <AlertTriangle size={20} />
+            {error}
+          </ErrorMessage>
+        )}
+
         <TopSection>
           <Clock />
-          
           <WelcomeMessage>
-            Welcome back, {user ? formatUsername(user.username) : 'Principal Officer'}
+            Welcome back, {formatUsername(user?.username)}
             <p>Manage and oversee task assignments and monitor team performance</p>
           </WelcomeMessage>
 
           <SearchSection>
             <SearchBar>
-              <SearchIcon size={20} />
+              <SearchIcon>
+                <Search size={20} />
+              </SearchIcon>
               <SearchInput
                 type="text"
                 placeholder="Search tasks by name or assignee..."
@@ -606,17 +424,6 @@ const PrincipalOfficerDashboard = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </SearchBar>
-            <ButtonGroup>
-              <Button variant="secondary">
-                <Filter size={20} />
-                Filter
-                <ChevronDown size={16} />
-              </Button>
-              <Button variant="secondary">
-                <Download size={20} />
-                Export
-              </Button>
-            </ButtonGroup>
           </SearchSection>
         </TopSection>
 
@@ -628,7 +435,7 @@ const PrincipalOfficerDashboard = () => {
                 <ClipboardList size={24} />
               </StatIcon>
             </StatHeader>
-            <StatValue>{stats.total}</StatValue>
+            <StatValue>{dashboardData.stats.totalTasks}</StatValue>
             <StatChange>Tasks assigned</StatChange>
           </StatCard>
 
@@ -639,7 +446,7 @@ const PrincipalOfficerDashboard = () => {
                 <Users size={24} />
               </StatIcon>
             </StatHeader>
-            <StatValue>{stats.assigned}</StatValue>
+            <StatValue>{dashboardData.stats.teamMembers}</StatValue>
             <StatChange increase>Active assignments</StatChange>
           </StatCard>
 
@@ -650,8 +457,10 @@ const PrincipalOfficerDashboard = () => {
                 <ClockIcon size={24} />
               </StatIcon>
             </StatHeader>
-            <StatValue>{stats.completed}</StatValue>
-            <StatChange increase>{stats.completionRate}% success rate</StatChange>
+            <StatValue>{dashboardData.stats.completedTasks}</StatValue>
+            <StatChange increase>
+              {((dashboardData.stats.completedTasks / dashboardData.stats.totalTasks) * 100).toFixed(1)}% success rate
+            </StatChange>
           </StatCard>
 
           <StatCard>
@@ -661,123 +470,51 @@ const PrincipalOfficerDashboard = () => {
                 <AlertTriangle size={24} />
               </StatIcon>
             </StatHeader>
-            <StatValue>{stats.pending}</StatValue>
+            <StatValue>{dashboardData.stats.pendingReview}</StatValue>
             <StatChange>Need attention</StatChange>
           </StatCard>
         </StatsGrid>
 
-        <TasksContainer>
-          <TasksHeader>
-            <h2 style={{ fontSize: '24px', fontWeight: '600', color: '#1e293b' }}>
-              Task Management
-            </h2>
-            <Bell size={24} color="#64748b" style={{ cursor: 'pointer' }} />
-          </TasksHeader>
+        <DeadlineTimeline>
+  <h2>Upcoming Deadlines</h2>
+  {dashboardData.upcomingDeadlines.map((task) => (
+    <ClickableTask key={task.id} taskId={task.id}>
+      <TimelineItem>
+        <div className="content">
+          <div className="task-name">{task.name}</div>
+          <div className="date">Due: {new Date(task.deadline).toLocaleDateString()}</div>
+        </div>
+      </TimelineItem>
+    </ClickableTask>
+  ))}
+  {dashboardData.upcomingDeadlines.length === 0 && (
+    <p style={{ color: '#64748b', textAlign: 'center', padding: '20px' }}>
+      No upcoming deadlines
+    </p>
+  )}
+</DeadlineTimeline>
 
-          <TaskTableWrapper>
-            {isLoading ? (
-              <LoadingSpinner>Loading tasks...</LoadingSpinner>
-            ) : filteredTasks.length > 0 ? (
-              <TaskTable>
-                <thead>
-                  <tr>
-                    <TaskTableHeader>S/No</TaskTableHeader>
-                    <TaskTableHeader>TASK ID</TaskTableHeader>
-                    <TaskTableHeader>TASK NAME</TaskTableHeader>
-                    <TaskTableHeader>STATUS</TaskTableHeader>
-                    <TaskTableHeader>DEADLINE</TaskTableHeader>
-                    <TaskTableHeader>ASSIGNED TO</TaskTableHeader>
-                    <TaskTableHeader>ACTIONS</TaskTableHeader>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredTasks.map((task, index) => (
-                    <TaskRow 
-                      key={task.id} 
-                      onClick={() => handleTaskClick(task)}
-                    >
-                      <TaskCell>{index + 1}</TaskCell>
-                      <TaskCell>{task.id}</TaskCell>
-                      <TaskCell>{task.name}</TaskCell>
-                      <TaskCell>
-                        <StatusBadge status={task.status}>
-                          {task.status}
-                        </StatusBadge>
-                      </TaskCell>
-                      <TaskCell>{task.deadline}</TaskCell>
-                      <TaskCell>
-                        {task.collaborators && task.collaborators.length > 0 
-                          ? task.collaborators.join(', ') 
-                          : task.assignedOfficer}
-                      </TaskCell>
-                      <TaskCell onClick={(e) => e.stopPropagation()}>
-                        <DelegateButton
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenModal(task);
-                          }}
-                          disabled={!isUserAssigned(task.assignedOfficer)}
-                        >
-                          <UserPlus size={16} />
-                          Delegate
-                        </DelegateButton>
-                      </TaskCell>
-                    </TaskRow>
-                  ))}
-                </tbody>
-              </TaskTable>
-            ) : (
-              <NoTasksMessage>
-                <h3>No Tasks Found</h3>
-                <p>There are no tasks matching your search criteria.</p>
-                {!searchTerm && (
-                  <img 
-                    src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExbTFiNzVicXh1dHp2aWd3YnE4amZjcnIzdWl2NnBmY3h4engyOTN6ZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/26ufnwz3wDUli7GU0/giphy.webp" 
-                    alt="No tasks" 
-                  />
-                )}
-              </NoTasksMessage>
-            )}
-          </TaskTableWrapper>
-        </TasksContainer>
-
-        {isModalOpen && (
-          <Modal.Overlay>
-            <Modal.Content>
-              <Modal.Header>Delegate Task</Modal.Header>
-              <Modal.Body>
-                <label htmlFor="newOfficer">Select Senior Officer:</label>
-                <div className="select-container">
-                  <Select
-                    id="newOfficer"
-                    value={selectedOfficer}
-                    onChange={setSelectedOfficer}
-                    options={seniorOfficers}
-                    isSearchable
-                    placeholder="Choose a senior officer..."
-                    className="basic-select"
-                    classNamePrefix="select"
-                  />
-                </div>
-              </Modal.Body>
-              <Modal.Footer>
-                <Modal.Button 
-                  variant="cancel" 
-                  onClick={handleCloseModal}
-                  disabled={isDelegating}
-                >
-                  Cancel
-                </Modal.Button>
-                <Modal.Button 
-                  onClick={handleDelegateTask}
-                  disabled={!selectedOfficer || isDelegating}
-                >
-                  {isDelegating ? 'Delegating...' : 'Confirm Delegation'}
-                </Modal.Button>
-              </Modal.Footer>
-            </Modal.Content>
-          </Modal.Overlay>
-        )}
+<ActivityFeed>
+  <h2>Recent Activity</h2>
+  {dashboardData.recentActivities.map((activity, index) => (
+    <ClickableTask key={index} taskId={activity.taskId}>
+      <ActivityItem>
+        <ActivityIcon>
+          <Activity size={16} />
+        </ActivityIcon>
+        <ActivityContent>
+          <ActivityTitle>{activity.description}</ActivityTitle>
+          <ActivityTime>{new Date(activity.timestamp).toLocaleString()}</ActivityTime>
+        </ActivityContent>
+      </ActivityItem>
+    </ClickableTask>
+  ))}
+  {dashboardData.recentActivities.length === 0 && (
+    <p style={{ color: '#64748b', textAlign: 'center', padding: '20px' }}>
+      No recent activities
+    </p>
+  )}
+</ActivityFeed>
       </Content>
     </DashboardContainer>
   );
