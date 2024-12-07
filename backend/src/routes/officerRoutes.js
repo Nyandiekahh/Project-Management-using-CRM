@@ -1,12 +1,25 @@
 // src/routes/officerRoutes.js
 const express = require('express');
 const router = express.Router();
-const officerController = require('../controllers/officerController');
+const { readFile } = require('../utils/fileHandler');
+const { usersFilePath } = require('../config/database');
 
-// Get senior officers - will be accessed at /officers/senior
-router.get('/senior', officerController.getSeniorOfficers);
-
-// Get all officers - will be accessed at /officers
-router.get('/', officerController.getAllOfficers);
+router.get('/', async (req, res) => {
+  try {
+    const users = await readFile(usersFilePath);
+    const seniorOfficers = users.filter(user => 
+      user.role === 'seniorOfficer' || 
+      user.role === 'principalOfficer'
+    ).map(user => ({
+      id: user.id,
+      name: user.username,
+      role: user.role
+    }));
+    res.json(seniorOfficers);
+  } catch (error) {
+    console.error('Error fetching senior officers:', error);
+    res.status(500).json({ error: 'Failed to fetch senior officers' });
+  }
+});
 
 module.exports = router;

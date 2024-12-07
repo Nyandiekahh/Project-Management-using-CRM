@@ -6,14 +6,29 @@ import { useAuth } from '../context/AuthProvider';
 const ProtectedRoute = ({ component: Component, role, ...rest }) => {
   const { user } = useAuth();
 
+  // If not logged in, redirect to login
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
+  // If route requires a specific role and user doesn't have it,
+  // redirect to their appropriate dashboard
   if (role && user.role !== role) {
-    return <Navigate to="/login" replace />;
+    switch (user.role) {
+      case 'deputyDirector':
+        return <Navigate to="/admin-dashboard" replace />;
+      case 'principalOfficer':
+        return <Navigate to="/principal-officer-dashboard" replace />;
+      case 'seniorOfficer':
+        return <Navigate to="/senior-officer-dashboard" replace />;
+      case 'officer':
+        return <Navigate to="/officer-dashboard" replace />;
+      default:
+        return <Navigate to="/login" replace />;
+    }
   }
 
+  // If everything is okay, render the protected component
   return <Component {...rest} />;
 };
 

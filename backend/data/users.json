@@ -14,5 +14,37 @@
     "role": "seniorOfficer",
     "createdAt": "2024-12-07T07:05:12.756Z",
     "status": "active"
+  },
+  {
+    "id": "1733555395070",
+    "username": "deputyDirector",
+    "password": "$2a$10$tGTPQwRF/3YgK0LlfXQhYOYjQRQ8HTtsCrKjs98rAFKGAUymHBh1G",
+    "role": "deputyDirector",
+    "createdAt": "2024-12-07T07:09:55.070Z",
+    "status": "active"
+  },
+  {
+    "id": "1733557019074",
+    "username": "Principal Officer Test",
+    "password": "$2a$10$lXcOWcoxRPqLdQCG2RQa1epWrEc5YuXyI35PLSH2/14nXi2odpVvm",
+    "role": "principalOfficer",
+    "createdAt": "2024-12-07T07:36:59.074Z",
+    "status": "active"
+  },
+  {
+    "id": "1733578699459",
+    "username": "Senior Officer 1",
+    "password": "$2a$10$Mk2qRt39yrvFsxBn3rv3fuqRKGLSoU8e4dVuqC.HZJmf85ROJcwmK",
+    "role": "seniorOfficer",
+    "createdAt": "2024-12-07T13:38:19.460Z",
+    "status": "active"
+  },
+  {
+    "id": "1733578776596",
+    "username": "PO",
+    "password": "$2a$10$4LeEHDwIF61D1vx8IzxIZOoRcmb1k4FU39Zu.qbSIfx5DSHs9o6XS",
+    "role": "principalOfficer",
+    "createdAt": "2024-12-07T13:39:36.596Z",
+    "status": "active"
   }
 ]

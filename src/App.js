@@ -5,14 +5,14 @@ import Login from './components/Login';
 import AdminDashboard from './pages/AdminDashboard';
 import UserManagement from './pages/UserManagement';
 import ComplaintsPage from './pages/ComplaintsPage';
-import TaskManagementPage from './pages/TaskManagementPage';
+import TaskList from './components/TaskList';  // Updated import
 import OfficerDashboard from './pages/OfficerDashboard';
 import TaskDetails from './pages/TaskDetails';
 import ProtectedRoute from './components/ProtectedRoute';
 import PrincipalOfficerDashboard from './pages/PrincipalOfficerDashboard';
 import SeniorOfficerDashboard from './pages/SeniorOfficerDashboard';
 import Reports from './pages/Reports';
-import MyTasksPage from './pages/MyTasksPage'; // Ensure this import is correct
+import MyTasksPage from './pages/MyTasksPage';
 
 const App = () => {
   return (
@@ -34,7 +34,7 @@ const App = () => {
           />
           <Route
             path="/tasks"
-            element={<ProtectedRoute component={TaskManagementPage} />}
+            element={<ProtectedRoute component={TaskList} />}
           />
           <Route
             path="/my-tasks"

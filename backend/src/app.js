@@ -27,7 +27,22 @@ app.use('/complaints', require('./routes/complaintRoutes'));
 app.use('/officers', require('./routes/officerRoutes'));
 app.use('/users', require('./routes/userRoutes')); // Add this line
 app.use('/user-management', require('./routes/userRoutes')); // This matches your frontend URL
+app.use('/senior-officers', require('./routes/officerRoutes'));
 
+
+// Add this with your other routes in app.js
+app.use('/senior-officers', (req, res) => {
+  try {
+    const users = require('../data/users.json');
+    const seniorOfficers = users.filter(user => 
+      user.role === 'seniorOfficer' || user.role === 'principalOfficer'
+    );
+    res.json(seniorOfficers);
+  } catch (error) {
+    console.error('Error fetching senior officers:', error);
+    res.status(500).json({ error: 'Failed to fetch senior officers' });
+  }
+});
 
 // Error handling for file uploads
 app.use((error, req, res, next) => {

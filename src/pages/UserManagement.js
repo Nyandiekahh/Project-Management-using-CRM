@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Sidebar from '../components/Sidebar';
 import UserForm from '../components/UserForm';
-import usersData from '../users.json'; // Import the JSON file
+import { useAuth } from '../context/AuthProvider';
 
 const Content = styled.div`
   flex: 1;
@@ -17,44 +17,7 @@ const WelcomeMessage = styled.div`
   margin-bottom: 20px;
 `;
 
-const CurrentUsers = styled.div`
-  background-color: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-`;
-
-const UserList = styled.div`
-  margin-top: 20px;
-`;
-
-const UserTable = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-`;
-
-const UserTableHeader = styled.th`
-  background-color: #34495e;
-  color: white;
-  padding: 12px;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
-`;
-
-const UserRow = styled.tr`
-  &:nth-child(even) {
-    background-color: #f2f2f2;
-  }
-`;
-
-const UserCell = styled.td`
-  padding: 12px;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
-`;
-
-const Button = styled.button`
+const ActionButton = styled.button`
   padding: 10px 20px;
   background-color: #3498db;
   color: white;
@@ -62,20 +25,51 @@ const Button = styled.button`
   border-radius: 4px;
   cursor: pointer;
   margin-bottom: 20px;
+  font-size: 16px;
 
   &:hover {
     background-color: #2980b9;
   }
 `;
 
+const UserTable = styled.table`
+  width: 100%;
+  background-color: white;
+  border-radius: 8px;
+  border-collapse: collapse;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+`;
+
+const TableHeader = styled.th`
+  background-color: #34495e;
+  color: white;
+  padding: 15px;
+  text-align: left;
+`;
+
+const TableRow = styled.tr`
+  &:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+`;
+
+const TableCell = styled.td`
+  padding: 12px 15px;
+  border-bottom: 1px solid #ddd;
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 8px;
+`;
+
 const EditButton = styled.button`
-  padding: 5px 10px;
+  padding: 6px 12px;
   background-color: #2ecc71;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  margin-right: 5px;
 
   &:hover {
     background-color: #27ae60;
@@ -83,7 +77,7 @@ const EditButton = styled.button`
 `;
 
 const DeleteButton = styled.button`
-  padding: 5px 10px;
+  padding: 6px 12px;
   background-color: #e74c3c;
   color: white;
   border: none;
@@ -97,8 +91,9 @@ const DeleteButton = styled.button`
 
 const NoUsersMessage = styled.div`
   text-align: center;
-  margin-top: 20px;
+  padding: 20px;
   font-size: 18px;
+  color: #666;
 `;
 
 const UserManagement = () => {
@@ -106,105 +101,128 @@ const UserManagement = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
-
-  const toggleSidebar = () => {
-    setSidebarOpen(!isSidebarOpen);
-  };
+  const { user: currentUser } = useAuth();
 
   useEffect(() => {
-    const storedUsers = JSON.parse(localStorage.getItem('users')) || usersData;
-    setUsers(storedUsers);
+    fetchUsers();
   }, []);
 
-  const saveUsersToLocalStorage = (users) => {
-    localStorage.setItem('users', JSON.stringify(users));
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/user-management');
+      if (!response.ok) throw new Error('Failed to fetch users');
+      const data = await response.json();
+      setUsers(data);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
   };
 
-  const handleCreateUser = (newUser) => {
-    const updatedUsers = [...users, newUser];
-    setUsers(updatedUsers);
-    saveUsersToLocalStorage(updatedUsers);
-    setShowForm(false);
-    setEditingUser(null);
+  const handleCreateUser = async (userData) => {
+    try {
+      const response = await fetch('http://localhost:5000/user-management', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
+      });
+      
+      if (!response.ok) throw new Error('Failed to create user');
+      await fetchUsers();
+      setShowForm(false);
+    } catch (error) {
+      console.error('Error creating user:', error);
+    }
   };
 
-  const handleUpdateUser = (updatedUser) => {
-    const updatedUsers = users.map(user =>
-      user.id === updatedUser.id ? updatedUser : user
-    );
-    setUsers(updatedUsers);
-    saveUsersToLocalStorage(updatedUsers);
-    setShowForm(false);
-    setEditingUser(null);
+  const handleUpdateUser = async (userData) => {
+    try {
+      const response = await fetch(`http://localhost:5000/user-management/${userData.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
+      });
+      
+      if (!response.ok) throw new Error('Failed to update user');
+      await fetchUsers();
+      setShowForm(false);
+      setEditingUser(null);
+    } catch (error) {
+      console.error('Error updating user:', error);
+    }
   };
 
-  const handleEditUser = (user) => {
-    setEditingUser(user);
-    setShowForm(true);
-  };
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm('Are you sure you want to delete this user?')) return;
 
-  const handleDeleteUser = (userId) => {
-    const updatedUsers = users.filter(user => user.id !== userId);
-    setUsers(updatedUsers);
-    saveUsersToLocalStorage(updatedUsers);
-  };
-
-  const toggleForm = () => {
-    setShowForm(!showForm);
-    setEditingUser(null);
+    try {
+      const response = await fetch(`http://localhost:5000/user-management/${userId}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) throw new Error('Failed to delete user');
+      await fetchUsers();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+    }
   };
 
   return (
     <div>
-      <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+      <Sidebar isOpen={isSidebarOpen} toggleSidebar={() => setSidebarOpen(!isSidebarOpen)} />
       <Content isSidebarOpen={isSidebarOpen}>
         <WelcomeMessage>
           User Management
           <p>Manage user accounts and permissions.</p>
         </WelcomeMessage>
-        <Button onClick={toggleForm}>
-          {showForm ? 'Hide Form' : 'Create New User'}
-        </Button>
+
+        <ActionButton onClick={() => {
+          setEditingUser(null);
+          setShowForm(!showForm);
+        }}>
+          {showForm ? 'Cancel' : 'Create New User'}
+        </ActionButton>
+
         {showForm && (
           <UserForm
             onSubmit={editingUser ? handleUpdateUser : handleCreateUser}
             initialUser={editingUser}
           />
         )}
-        <CurrentUsers>
-          <h2>Current Users</h2>
-          <UserList>
-            {users.length > 0 ? (
-              <UserTable>
-                <thead>
-                  <tr>
-                    <UserTableHeader>ID</UserTableHeader>
-                    <UserTableHeader>Username</UserTableHeader>
-                    <UserTableHeader>Role</UserTableHeader>
-                    <UserTableHeader>ACTIONS</UserTableHeader>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map(user => (
-                    <UserRow key={user.id}>
-                      <UserCell>{user.id}</UserCell>
-                      <UserCell>{user.username}</UserCell>
-                      <UserCell>{user.role}</UserCell>
-                      <UserCell>
-                        <EditButton onClick={() => handleEditUser(user)}>Edit</EditButton>
-                        <DeleteButton onClick={() => handleDeleteUser(user.id)}>Delete</DeleteButton>
-                      </UserCell>
-                    </UserRow>
-                  ))}
-                </tbody>
-              </UserTable>
-            ) : (
-              <NoUsersMessage>
-                No users found.
-              </NoUsersMessage>
-            )}
-          </UserList>
-        </CurrentUsers>
+
+        {users.length > 0 ? (
+          <UserTable>
+            <thead>
+              <tr>
+                <TableHeader>Username</TableHeader>
+                <TableHeader>Role</TableHeader>
+                <TableHeader>Actions</TableHeader>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map(user => (
+                <TableRow key={user.id}>
+                  <TableCell>{user.username}</TableCell>
+                  <TableCell>{user.role}</TableCell>
+                  <TableCell>
+                    <ButtonGroup>
+                      <EditButton onClick={() => {
+                        setEditingUser(user);
+                        setShowForm(true);
+                      }}>
+                        Edit
+                      </EditButton>
+                      <DeleteButton onClick={() => handleDeleteUser(user.id)}>
+                        Delete
+                      </DeleteButton>
+                    </ButtonGroup>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </tbody>
+          </UserTable>
+        ) : (
+          <NoUsersMessage>No users found.</NoUsersMessage>
+        )}
       </Content>
     </div>
   );

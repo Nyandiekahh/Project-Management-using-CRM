@@ -1,12 +1,31 @@
 // src/controllers/taskController.js
 const { readFile, writeFile } = require('../utils/fileHandler');
-const { tasksFilePath } = require('../config/database');
+const { tasksFilePath, usersFilePath } = require('../config/database');
 
 const taskController = {
   getAllTasks: async (req, res) => {
     try {
       const tasks = await readFile(tasksFilePath);
-      res.json(tasks);
+      const users = await readFile(usersFilePath);
+      
+      // Map user details to tasks
+      const tasksWithUserDetails = tasks.map(task => {
+        if (!task.assignedOfficer) return task;
+        
+        // If assignedOfficer is a user ID
+        if (task.assignedOfficer.includes('17335')) {
+          const user = users.find(u => u.id === task.assignedOfficer);
+          return {
+            ...task,
+            assignedOfficer: user ? user.username : task.assignedOfficer
+          };
+        }
+        
+        // If it's already a name/title, keep it as is
+        return task;
+      });
+
+      res.json(tasksWithUserDetails);
     } catch (error) {
       console.error('Error reading tasks file:', error);
       res.status(500).json({ error: 'Error reading tasks file' });
@@ -32,6 +51,8 @@ const taskController = {
   createTask: async (req, res) => {
     try {
       const tasks = await readFile(tasksFilePath);
+      const users = await readFile(usersFilePath);
+      
       const newTask = {
         ...req.body,
         documentUrl: req.file ? `/uploads/${req.file.filename}` : null,
@@ -41,8 +62,19 @@ const taskController = {
         content: '',
         progress: 0
       };
+
+      // Store the task
       tasks.push(newTask);
       await writeFile(tasksFilePath, tasks);
+
+      // For the response, convert ID to username if it's an ID
+      if (newTask.assignedOfficer.includes('17335')) {
+        const user = users.find(u => u.id === newTask.assignedOfficer);
+        if (user) {
+          newTask.assignedOfficer = user.username;
+        }
+      }
+
       res.status(201).json({ message: 'Task created successfully', newTask });
     } catch (error) {
       console.error('Error writing tasks file:', error);
@@ -120,14 +152,32 @@ const taskController = {
 
     try {
       const tasks = await readFile(tasksFilePath);
+      const users = await readFile(usersFilePath);
+      
       const taskIndex = tasks.findIndex(task => task.id === taskId);
       if (taskIndex === -1) {
         return res.status(404).json({ error: 'Task not found' });
       }
 
-      tasks[taskIndex].assignedOfficer += `, ${newOfficer}`;
+      tasks[taskIndex].assignedOfficer += `,${newOfficer}`;
       await writeFile(tasksFilePath, tasks);
-      res.json({ message: 'Task delegated successfully', task: tasks[taskIndex] });
+
+      // Convert IDs to usernames in response
+      let assignedOfficers = tasks[taskIndex].assignedOfficer.split(',').map(officer => {
+        officer = officer.trim();
+        if (officer.includes('17335')) {
+          const user = users.find(u => u.id === officer);
+          return user ? user.username : officer;
+        }
+        return officer;
+      });
+
+      const taskWithUserDetails = {
+        ...tasks[taskIndex],
+        assignedOfficer: assignedOfficers.join(', ')
+      };
+
+      res.json({ message: 'Task delegated successfully', task: taskWithUserDetails });
     } catch (error) {
       console.error('Error writing tasks file:', error);
       res.status(500).json({ error: 'Error writing tasks file' });

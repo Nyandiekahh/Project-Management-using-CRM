@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import Sidebar from '../components/Sidebar';
 import Clock from '../components/Clock';
+import Select from 'react-select'; // Added this import
+
 import { 
   ClipboardList, 
   Clock as ClockIcon, 
@@ -370,19 +372,8 @@ const Modal = {
       margin-bottom: 8px;
     }
 
-    input {
-      width: 100%;
-      padding: 12px;
-      border: 2px solid #e2e8f0;
-      border-radius: 8px;
-      font-size: 16px;
-      transition: all 0.2s;
-
-      &:focus {
-        outline: none;
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-      }
+    .select-container {
+      margin-top: 8px;
     }
   `,
   Footer: styled.div`
@@ -403,6 +394,11 @@ const Modal = {
 
     &:hover {
       background-color: ${props => props.variant === 'cancel' ? '#dc2626' : '#2563eb'};
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
   `
 };
@@ -449,13 +445,16 @@ const PrincipalOfficerDashboard = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [taskToDelegate, setTaskToDelegate] = useState(null);
-  const [newOfficer, setNewOfficer] = useState('');
+  const [seniorOfficers, setSeniorOfficers] = useState([]);
+  const [selectedOfficer, setSelectedOfficer] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isDelegating, setIsDelegating] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchTasks();
+    fetchSeniorOfficers();
   }, []);
 
   useEffect(() => {
@@ -467,6 +466,25 @@ const PrincipalOfficerDashboard = () => {
       setFilteredTasks(filtered);
     }
   }, [searchTerm, tasks]);
+
+
+  const fetchSeniorOfficers = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/officers/senior');
+      if (!response.ok) {
+        throw new Error('Failed to fetch senior officers');
+      }
+      const data = await response.json();
+      setSeniorOfficers(data.map(officer => ({
+        value: officer.id,
+        label: officer.name
+      })));
+    } catch (error) {
+      console.error('Error fetching senior officers:', error);
+    }
+  };
+
+
 
   const fetchTasks = async () => {
     try {
@@ -509,29 +527,47 @@ const PrincipalOfficerDashboard = () => {
 
   const handleOpenModal = (task) => {
     setTaskToDelegate(task);
+    setSelectedOfficer(null);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setTaskToDelegate(null);
-    setNewOfficer('');
+    setSelectedOfficer(null);
+    setIsDelegating(false);
   };
 
-  const handleDelegateTask = () => {
-    fetch(`http://localhost:5000/tasks/${taskToDelegate.id}/delegate`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ newOfficer }),
-    })
-      .then(response => response.json())
-      .then(updatedTask => {
-        setTasks(prevTasks => prevTasks.map(t => t.id === updatedTask.id ? updatedTask : t));
-        handleCloseModal();
-      })
-      .catch(error => console.error('Error delegating task:', error));
+  const handleDelegateTask = async () => {
+    if (!selectedOfficer) return;
+    
+    setIsDelegating(true);
+    try {
+      const response = await fetch(`http://localhost:5000/tasks/${taskToDelegate.id}/delegate`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          newOfficerId: selectedOfficer.value,
+          newOfficerName: selectedOfficer.label
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delegate task');
+      }
+
+      const updatedTask = await response.json();
+      setTasks(prevTasks => 
+        prevTasks.map(t => t.id === updatedTask.id ? updatedTask : t)
+      );
+      handleCloseModal();
+    } catch (error) {
+      console.error('Error delegating task:', error);
+    } finally {
+      setIsDelegating(false);
+    }
   };
 
   const formatUsername = (username) => {
@@ -710,21 +746,33 @@ const PrincipalOfficerDashboard = () => {
             <Modal.Content>
               <Modal.Header>Delegate Task</Modal.Header>
               <Modal.Body>
-                <label htmlFor="newOfficer">Select New Officer:</label>
-                <input
-                  type="text"
-                  id="newOfficer"
-                  value={newOfficer}
-                  onChange={(e) => setNewOfficer(e.target.value)}
-                  placeholder="Enter officer name"
-                />
+                <label htmlFor="newOfficer">Select Senior Officer:</label>
+                <div className="select-container">
+                  <Select
+                    id="newOfficer"
+                    value={selectedOfficer}
+                    onChange={setSelectedOfficer}
+                    options={seniorOfficers}
+                    isSearchable
+                    placeholder="Choose a senior officer..."
+                    className="basic-select"
+                    classNamePrefix="select"
+                  />
+                </div>
               </Modal.Body>
               <Modal.Footer>
-                <Modal.Button variant="cancel" onClick={handleCloseModal}>
+                <Modal.Button 
+                  variant="cancel" 
+                  onClick={handleCloseModal}
+                  disabled={isDelegating}
+                >
                   Cancel
                 </Modal.Button>
-                <Modal.Button onClick={handleDelegateTask}>
-                  Confirm Delegation
+                <Modal.Button 
+                  onClick={handleDelegateTask}
+                  disabled={!selectedOfficer || isDelegating}
+                >
+                  {isDelegating ? 'Delegating...' : 'Confirm Delegation'}
                 </Modal.Button>
               </Modal.Footer>
             </Modal.Content>

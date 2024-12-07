@@ -1,4 +1,4 @@
-// Login.js
+// src/components/Login.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthProvider';
@@ -14,18 +14,17 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const credentials = {
-    deputyDirector: { username: 'deputyDirector', password: 'dd123', navigateTo: '/admin-dashboard', role: 'deputyDirector' },
-    principalOfficer1: { username: 'principalOfficer1', password: 'po123', navigateTo: '/principal-officer-dashboard', role: 'principalOfficer' },
-    principalOfficer2: { username: 'principalOfficer2', password: 'po123', navigateTo: '/principal-officer-dashboard', role: 'principalOfficer' },
-    principalOfficer3: { username: 'principalOfficer3', password: 'po123', navigateTo: '/principal-officer-dashboard', role: 'principalOfficer' },
-    principalOfficer4: { username: 'principalOfficer4', password: 'po123', navigateTo: '/principal-officer-dashboard', role: 'principalOfficer' },
-    principalOfficer5: { username: 'principalOfficer5', password: 'po123', navigateTo: '/principal-officer-dashboard', role: 'principalOfficer' },
-    seniorOfficer1: { username: 'seniorOfficer1', password: 'so123', navigateTo: '/senior-officer-dashboard', role: 'seniorOfficer' },
-    seniorOfficer2: { username: 'seniorOfficer2', password: 'so123', navigateTo: '/senior-officer-dashboard', role: 'seniorOfficer' },
-    seniorOfficer3: { username: 'seniorOfficer3', password: 'so123', navigateTo: '/senior-officer-dashboard', role: 'seniorOfficer' },
-    seniorOfficer4: { username: 'seniorOfficer4', password: 'so123', navigateTo: '/senior-officer-dashboard', role: 'seniorOfficer' },
-    seniorOfficer5: { username: 'seniorOfficer5', password: 'so123', navigateTo: '/senior-officer-dashboard', role: 'seniorOfficer' }
+  const getRoleBasedRedirect = (role) => {
+    switch (role) {
+      case 'deputyDirector':
+        return '/admin-dashboard';
+      case 'principalOfficer':
+        return '/principal-officer-dashboard';
+      case 'seniorOfficer':
+        return '/senior-officer-dashboard';
+      default:
+        return '/officer-dashboard';
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -34,18 +33,26 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const user = Object.values(credentials).find(
-        user => user.username === username && user.password === password
-      );
+      const response = await fetch('http://localhost:5000/user-management/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
 
-      if (user) {
-        await login(user.username, user.role);
-        navigate(user.navigateTo);
+      const data = await response.json();
+
+      if (response.ok) {
+        await login(data.username, data.role);
+        const redirectPath = getRoleBasedRedirect(data.role);
+        navigate(redirectPath);
       } else {
-        setError('Invalid credentials. Please try again.');
+        setError(data.message || 'Invalid credentials. Please try again.');
       }
     } catch (err) {
       setError('An error occurred. Please try again later.');
+      console.error('Login error:', err);
     } finally {
       setIsLoading(false);
     }

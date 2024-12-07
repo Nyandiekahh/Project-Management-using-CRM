@@ -1,6 +1,7 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
+import { useAuth } from '../context/AuthProvider';
 import { 
   FaTachometerAlt, 
   FaTasks, 
@@ -9,7 +10,8 @@ import {
   FaBars, 
   FaSignOutAlt,
   FaComments,
-  FaCircle
+  FaCircle,
+  FaUsers
 } from 'react-icons/fa';
 
 const SidebarContainer = styled.div`
@@ -160,8 +162,9 @@ const MessageCount = styled.span`
 
 const Sidebar = ({ isOpen, toggleSidebar }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
   
-  // Mock chat users data
   const chatUsers = [
     { id: 1, name: 'John Doe', online: true, unread: 3 },
     { id: 2, name: 'Jane Smith', online: true, unread: 0 },
@@ -174,36 +177,79 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     navigate('/');
   };
 
+  // Define dashboard route based on user role
+  const getDashboardRoute = () => {
+    switch (user?.role) {
+      case 'deputyDirector':
+        return '/admin-dashboard';
+      case 'principalOfficer':
+        return '/principal-officer-dashboard';
+      case 'seniorOfficer':
+        return '/senior-officer-dashboard';
+      default:
+        return '/officer-dashboard';
+    }
+  };
+
   return (
     <SidebarContainer isOpen={isOpen}>
       <SidebarHeader onClick={toggleSidebar} isOpen={isOpen}>
         <SidebarIcon>
           <FaBars />
         </SidebarIcon>
-        <SidebarText isOpen={isOpen}>Admin Dashboard</SidebarText>
+        <SidebarText isOpen={isOpen}>{user?.role || 'Dashboard'}</SidebarText>
       </SidebarHeader>
       
       <SidebarNav>
-        <SidebarLink to="/admin-dashboard">
+        <SidebarLink 
+          to={getDashboardRoute()}
+          className={location.pathname === getDashboardRoute() ? 'active' : ''}
+        >
           <SidebarIcon><FaTachometerAlt /></SidebarIcon>
           <SidebarText isOpen={isOpen}>Dashboard</SidebarText>
         </SidebarLink>
-        <SidebarLink to="/my-tasks">
+
+        {/* Only show User Management for Deputy Director (admin) */}
+        {user?.role === 'deputyDirector' && (
+          <SidebarLink 
+            to="/user-management"
+            className={location.pathname === '/user-management' ? 'active' : ''}
+          >
+            <SidebarIcon><FaUsers /></SidebarIcon>
+            <SidebarText isOpen={isOpen}>User Management</SidebarText>
+          </SidebarLink>
+        )}
+
+        <SidebarLink 
+          to="/my-tasks"
+          className={location.pathname === '/my-tasks' ? 'active' : ''}
+        >
           <SidebarIcon><FaTasks /></SidebarIcon>
           <SidebarText isOpen={isOpen}>My Tasks</SidebarText>
         </SidebarLink>
-        <SidebarLink to="/complaints">
+
+        <SidebarLink 
+          to="/complaints"
+          className={location.pathname === '/complaints' ? 'active' : ''}
+        >
           <SidebarIcon><FaClipboardList /></SidebarIcon>
           <SidebarText isOpen={isOpen}>Complaints</SidebarText>
         </SidebarLink>
-        <SidebarLink to="/reports">
+
+        <SidebarLink 
+          to="/reports"
+          className={location.pathname === '/reports' ? 'active' : ''}
+        >
           <SidebarIcon><FaFileAlt /></SidebarIcon>
           <SidebarText isOpen={isOpen}>Reports</SidebarText>
         </SidebarLink>
         
         {/* Chat Section */}
         <ChatSection>
-          <SidebarLink to="/messages">
+          <SidebarLink 
+            to="/messages"
+            className={location.pathname === '/messages' ? 'active' : ''}
+          >
             <SidebarIcon><FaComments /></SidebarIcon>
             <SidebarText isOpen={isOpen}>Messages</SidebarText>
           </SidebarLink>
