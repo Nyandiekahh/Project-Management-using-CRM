@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthProvider';
 import { Search, Filter, Clock, User, Link as LinkIcon, AlertCircle, X, FileText, Download } from 'lucide-react';
 import jsPDF from 'jspdf';
 
-// Styled Components (All your existing styled components remain the same)
+// Styled Components
 const StyledTaskList = styled.div`
   min-height: 100vh;
   background: #f7fafc;
@@ -290,7 +290,6 @@ const NoDataMessage = styled.div`
   font-size: 16px;
 `;
 
-// Configure Modal
 Modal.setAppElement('#root');
 
 const ITEMS_PER_PAGE = 5;
@@ -299,7 +298,6 @@ const TaskList = () => {
   const { user } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [seniorOfficers, setSeniorOfficers] = useState([]);
-  const [selectedOfficer, setSelectedOfficer] = useState('');
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [currentTaskId, setCurrentTaskId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -307,11 +305,7 @@ const TaskList = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [filterStatus, setFilterStatus] = useState('all');
-
-  // Debug tasks data
-  useEffect(() => {
-    console.log('Tasks received:', tasks);
-  }, [tasks]);
+  const [selectedOfficer, setSelectedOfficer] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -326,16 +320,26 @@ const TaskList = () => {
           throw new Error('Failed to fetch data');
         }
 
-        const tasksData = await tasksResponse.json();
+        let tasksData = await tasksResponse.json();
         const officersData = await officersResponse.json();
 
-        // Ensure tasks is always an array
-        setTasks(Array.isArray(tasksData) ? tasksData : []);
+        // Filter tasks based on user role
+        if (user.role === 'deputyDirector') {
+          // Admin sees all tasks
+          setTasks(Array.isArray(tasksData) ? tasksData : []);
+        } else {
+          // Other users only see their assigned tasks
+          const userTasks = tasksData.filter(task => {
+            const assignees = task.assignedOfficer?.split(', ') || [];
+            return assignees.includes(user.username);
+          });
+          setTasks(Array.isArray(userTasks) ? userTasks : []);
+        }
+
         setSeniorOfficers(Array.isArray(officersData) ? officersData : []);
       } catch (err) {
         setError('Failed to load data. Please try again later.');
         console.error('Error fetching data:', err);
-        // Initialize with empty arrays on error
         setTasks([]);
         setSeniorOfficers([]);
       } finally {
@@ -344,7 +348,7 @@ const TaskList = () => {
     };
 
     fetchData();
-  }, []);
+  }, [user]);
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
@@ -472,15 +476,10 @@ const TaskList = () => {
     }
   };
 
-  const filteredTasks = (tasks || []).filter(task => {
-    if (!task || typeof task !== 'object') {
-      return false;
-    }
+  const filteredTasks = tasks.filter(task => {
+    if (!task || typeof task !== 'object') return false;
 
-    // Convert search term once
-    const searchLower = (searchTerm || '').toLowerCase();
-
-    // Handle search matching with complete null checking
+    const searchLower = searchTerm.toLowerCase();
     const matchesSearch = searchTerm === '' || [
       task?.name,
       task?.description,
@@ -489,7 +488,6 @@ const TaskList = () => {
       typeof field === 'string' && field.toLowerCase().includes(searchLower)
     );
 
-    // Handle status filtering with null checking
     const matchesStatus = filterStatus === 'all' || task?.status === filterStatus;
 
     return matchesSearch && matchesStatus;
@@ -599,7 +597,7 @@ const TaskList = () => {
                 </TaskContent>
 
                 <ActionButtons>
-                  {user?.role === 'Principal Officer' && 
+                  {user?.role === 'principalOfficer' && 
                    task?.assignedOfficer === user?.username && (
                     <Button primary onClick={() => {
                       setCurrentTaskId(task.id);
@@ -608,7 +606,7 @@ const TaskList = () => {
                       Delegate Task
                     </Button>
                   )}
-                  {user?.role === 'Deputy Director' && (
+                  {user?.role === 'deputyDirector' && (
                     <Button danger onClick={() => deleteTask(task.id)}>
                       Delete Task
                     </Button>
