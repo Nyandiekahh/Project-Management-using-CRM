@@ -1,0 +1,18 @@
+[
+  {
+    "id": "1733554919451",
+    "username": "admin",
+    "password": "$2a$10$J50taY25OR1RJw4spWtupubTKJFh5hE.EFJtbM1w97l7qam0YKGj6",
+    "role": "deputyDirector",
+    "createdAt": "2024-12-07T07:01:59.451Z",
+    "status": "active"
+  },
+  {
+    "id": "1733555112756",
+    "username": "Test Senior Officer",
+    "password": "$2a$10$VOfpC/.PauIhewFqmV8XeuCw2jZFPyjblC7F3qhvD2WtRmczqo0Ze",
+    "role": "seniorOfficer",
+    "createdAt": "2024-12-07T07:05:12.756Z",
+    "status": "active"
+  }
+]

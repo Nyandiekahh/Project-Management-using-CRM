@@ -3,7 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
-const multer = require('multer');  // Add this import
+const multer = require('multer');
 const { uploadsDir } = require('./config/database');
 
 const app = express();
@@ -24,7 +24,10 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // Routes
 app.use('/tasks', require('./routes/taskRoutes'));
 app.use('/complaints', require('./routes/complaintRoutes'));
-app.use('/senior-officers', require('./routes/officerRoutes'));
+app.use('/officers', require('./routes/officerRoutes'));
+app.use('/users', require('./routes/userRoutes')); // Add this line
+app.use('/user-management', require('./routes/userRoutes')); // This matches your frontend URL
+
 
 // Error handling for file uploads
 app.use((error, req, res, next) => {
