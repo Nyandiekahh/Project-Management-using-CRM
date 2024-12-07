@@ -4,17 +4,21 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import Sidebar from '../components/Sidebar';
 import Clock from '../components/Clock';
+import ClickableTask from '../components/ClickableTask';
+
 import { 
   ClipboardList, 
   Clock as ClockIcon, 
+  Users,
   AlertTriangle,
   Search,
-  Download,
   Filter,
+  Download,
   ChevronDown,
-  CheckCircle,
+  Activity,
+  Calendar,
   Bell,
-  Calendar
+  CheckCircle
 } from 'lucide-react';
 
 // Styled Components
@@ -340,66 +344,187 @@ const LoadingSpinner = styled.div`
   color: #3b82f6;
 `;
 
+const ActivityFeed = styled.div`
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-top: 24px;
+
+  h2 {
+    font-size: 20px;
+    color: #1e293b;
+    margin-bottom: 16px;
+    font-weight: 600;
+  }
+`;
+
+const ActivityItem = styled.div`
+  display: flex;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid #e2e8f0;
+
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
+const ActivityIcon = styled.div`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #dbeafe;
+  color: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  flex-shrink: 0;
+`;
+
+const ActivityContent = styled.div`
+  flex: 1;
+`;
+
+const ActivityTitle = styled.div`
+  font-weight: 500;
+  color: #1e293b;
+  margin-bottom: 4px;
+`;
+
+const ActivityTime = styled.div`
+  font-size: 14px;
+  color: #64748b;
+`;
+
+const DeadlineTimeline = styled.div`
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-top: 24px;
+
+  h2 {
+    font-size: 20px;
+    color: #1e293b;
+    margin-bottom: 16px;
+    font-weight: 600;
+  }
+`;
+
+const TimelineItem = styled.div`
+  display: flex;
+  padding: 16px 0;
+  border-left: 2px solid #e2e8f0;
+  margin-left: 16px;
+  position: relative;
+
+  &:before {
+    content: '';
+    position: absolute;
+    left: -5px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #3b82f6;
+  }
+
+  .content {
+    margin-left: 20px;
+  }
+
+  .task-name {
+    font-weight: 500;
+    color: #1e293b;
+    margin-bottom: 4px;
+  }
+
+  .date {
+    font-size: 14px;
+    color: #64748b;
+  }
+`;
+
+
 const SeniorOfficerDashboard = () => {
   const { user } = useAuth();
-  const [tasks, setTasks] = useState([]);
-  const [filteredTasks, setFilteredTasks] = useState([]);
-  const [isSidebarOpen, setSidebarOpen] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [dashboardData, setDashboardData] = useState({
+    stats: {
+      totalTasks: 0,
+      completed: 0,
+      inProgress: 0,
+      pending: 0
+    },
+    recentActivities: [],
+    upcomingDeadlines: []
+  });
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    fetchTasks();
-  }, []);
+    fetchDashboardData();
+  }, [user]);
 
-  useEffect(() => {
-    if (tasks.length > 0) {
-      const filtered = tasks.filter(task => 
-        task.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        task.assignedOfficer.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredTasks(filtered);
-    }
-  }, [searchTerm, tasks]);
-
-  const fetchTasks = async () => {
+  const fetchDashboardData = async () => {
     try {
+      setIsLoading(true);
       const response = await fetch('http://localhost:5000/tasks');
+
       if (!response.ok) {
-        throw new Error('Failed to fetch tasks');
+        throw new Error('Failed to fetch dashboard data');
       }
-      const data = await response.json();
-      setTasks(data);
-      setFilteredTasks(data);
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Error fetching tasks:', error);
+
+      const tasksData = await response.json();
+
+      // Filter tasks for current Senior Officer
+      const userTasks = tasksData.filter(task => {
+        const assignees = task.assignedOfficer?.split(', ') || [];
+        return assignees.includes(user.username);
+      });
+
+      // Calculate statistics
+      const stats = {
+        totalTasks: userTasks.length,
+        completed: userTasks.filter(task => task.status === 'Completed').length,
+        inProgress: userTasks.filter(task => task.status === 'In Progress').length,
+        pending: userTasks.filter(task => task.status === 'Pending').length
+      };
+
+      // Get activities from tasks
+      const recentActivities = userTasks
+        .map(task => ({
+          taskId: task.id,
+          description: `Task "${task.name}" - ${task.status}`,
+          timestamp: task.deadline
+        }))
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        .slice(0, 5);
+
+      // Get upcoming deadlines from tasks
+      const upcomingDeadlines = userTasks
+        .filter(task => new Date(task.deadline) > new Date())
+        .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
+        .slice(0, 5);
+
+      setDashboardData({
+        stats,
+        recentActivities,
+        upcomingDeadlines
+      });
+    } catch (err) {
+      setError('Failed to load dashboard data. Please try again later.');
+      console.error('Error fetching dashboard data:', err);
+    } finally {
       setIsLoading(false);
     }
-  };
-
-  const calculateStats = () => {
-    const total = tasks.length;
-    const completed = tasks.filter(task => task.status === 'Completed').length;
-    const inProgress = tasks.filter(task => task.status === 'In Progress').length;
-    const pending = tasks.filter(task => task.status === 'Pending').length;
-    
-    return {
-      total,
-      completed,
-      inProgress,
-      pending,
-      completionRate: total ? ((completed / total) * 100).toFixed(1) : 0
-    };
   };
 
   const toggleSidebar = () => {
     setSidebarOpen(!isSidebarOpen);
-  };
-
-  const handleTaskClick = (task) => {
-    navigate(`/tasks/${task.id}`);
   };
 
   const formatUsername = (username) => {
@@ -409,17 +534,31 @@ const SeniorOfficerDashboard = () => {
       ?.replace(/^./, str => str.toUpperCase());
   };
 
-  const stats = calculateStats();
+  if (isLoading) {
+    return (
+      <DashboardContainer>
+        <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+        <Content isSidebarOpen={isSidebarOpen}>
+          <LoadingSpinner>Loading dashboard data...</LoadingSpinner>
+        </Content>
+      </DashboardContainer>
+    );
+  }
 
   return (
     <DashboardContainer>
       <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
       <Content isSidebarOpen={isSidebarOpen}>
+        {error && (
+          <div style={{ color: '#ef4444', padding: '12px', marginBottom: '20px' }}>
+            {error}
+          </div>
+        )}
+
         <TopSection>
           <Clock />
-          
           <WelcomeMessage>
-            Welcome back, {user ? formatUsername(user.username) : 'Senior Officer'}
+            Welcome back, {formatUsername(user?.username)}
             <p>View and track your assigned tasks and their progress</p>
           </WelcomeMessage>
 
@@ -450,13 +589,13 @@ const SeniorOfficerDashboard = () => {
         <StatsGrid>
           <StatCard>
             <StatHeader>
-              <StatTitle>My Tasks</StatTitle>
+              <StatTitle>Total Tasks</StatTitle>
               <StatIcon bg="#dbeafe" color="#3b82f6">
                 <ClipboardList size={24} />
               </StatIcon>
             </StatHeader>
-            <StatValue>{stats.total}</StatValue>
-            <StatChange>Total assigned</StatChange>
+            <StatValue>{dashboardData.stats.totalTasks}</StatValue>
+            <StatChange>Tasks assigned</StatChange>
           </StatCard>
 
           <StatCard>
@@ -466,8 +605,10 @@ const SeniorOfficerDashboard = () => {
                 <CheckCircle size={24} />
               </StatIcon>
             </StatHeader>
-            <StatValue>{stats.completed}</StatValue>
-            <StatChange increase>{stats.completionRate}% complete</StatChange>
+            <StatValue>{dashboardData.stats.completed}</StatValue>
+            <StatChange increase>
+              {((dashboardData.stats.completed / dashboardData.stats.totalTasks) * 100).toFixed(1)}% complete
+            </StatChange>
           </StatCard>
 
           <StatCard>
@@ -477,87 +618,62 @@ const SeniorOfficerDashboard = () => {
                 <ClockIcon size={24} />
               </StatIcon>
             </StatHeader>
-            <StatValue>{stats.inProgress}</StatValue>
+            <StatValue>{dashboardData.stats.inProgress}</StatValue>
             <StatChange>Active tasks</StatChange>
           </StatCard>
 
           <StatCard>
             <StatHeader>
-              <StatTitle>Upcoming</StatTitle>
+              <StatTitle>Pending</StatTitle>
               <StatIcon bg="#fee2e2" color="#ef4444">
-                <Calendar size={24} />
+                <AlertTriangle size={24} />
               </StatIcon>
             </StatHeader>
-            <StatValue>{stats.pending}</StatValue>
-            <StatChange>Not started</StatChange>
+            <StatValue>{dashboardData.stats.pending}</StatValue>
+            <StatChange>Need attention</StatChange>
           </StatCard>
         </StatsGrid>
 
-        <TasksContainer>
-          <TasksHeader>
-          <h2 style={{ fontSize: '24px', fontWeight: '600', color: '#1e293b' }}>
-              My Assigned Tasks
-            </h2>
-            <Bell size={24} color="#64748b" style={{ cursor: 'pointer' }} />
-          </TasksHeader>
+        <DeadlineTimeline>
+          <h2>Upcoming Deadlines</h2>
+          {dashboardData.upcomingDeadlines.map((task) => (
+            <ClickableTask key={task.id} taskId={task.id}>
+              <TimelineItem>
+                <div className="content">
+                  <div className="task-name">{task.name}</div>
+                  <div className="date">Due: {new Date(task.deadline).toLocaleDateString()}</div>
+                </div>
+              </TimelineItem>
+            </ClickableTask>
+          ))}
+          {dashboardData.upcomingDeadlines.length === 0 && (
+            <p style={{ color: '#64748b', textAlign: 'center', padding: '20px' }}>
+              No upcoming deadlines
+            </p>
+          )}
+        </DeadlineTimeline>
 
-          <TaskTableWrapper>
-            {isLoading ? (
-              <LoadingSpinner>Loading tasks...</LoadingSpinner>
-            ) : filteredTasks.length > 0 ? (
-              <TaskTable>
-                <thead>
-                  <tr>
-                    <TaskTableHeader>S/No</TaskTableHeader>
-                    <TaskTableHeader>TASK ID</TaskTableHeader>
-                    <TaskTableHeader>TASK NAME</TaskTableHeader>
-                    <TaskTableHeader>STATUS</TaskTableHeader>
-                    <TaskTableHeader>DEADLINE</TaskTableHeader>
-                    <TaskTableHeader>ASSIGNED TO</TaskTableHeader>
-                    <TaskTableHeader>ACTIONS</TaskTableHeader>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredTasks.map((task, index) => (
-                    <TaskRow 
-                      key={task.id} 
-                      onClick={() => handleTaskClick(task)}
-                    >
-                      <TaskCell>{index + 1}</TaskCell>
-                      <TaskCell>{task.id}</TaskCell>
-                      <TaskCell>{task.name}</TaskCell>
-                      <TaskCell>
-                        <StatusBadge status={task.status}>
-                          {task.status}
-                        </StatusBadge>
-                      </TaskCell>
-                      <TaskCell>{task.deadline}</TaskCell>
-                      <TaskCell>
-                        {task.collaborators && task.collaborators.length > 0 
-                          ? task.collaborators.join(', ') 
-                          : task.assignedOfficer}
-                      </TaskCell>
-                      <TaskCell>
-                        {/* Placeholder for future actions if needed */}
-                      </TaskCell>
-                    </TaskRow>
-                  ))}
-                </tbody>
-              </TaskTable>
-            ) : (
-              <NoTasksMessage>
-                <h3>No Tasks Found</h3>
-                <p>There are no tasks matching your search criteria.</p>
-                {!searchTerm && (
-                  <img 
-                    src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExbTFiNzVicXh1dHp2aWd3YnE4amZjcnIzdWl2NnBmY3h4engyOTN6ZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/26ufnwz3wDUli7GU0/giphy.webp" 
-                    alt="No tasks" 
-                  />
-                )}
-              </NoTasksMessage>
-            )}
-          </TaskTableWrapper>
-        </TasksContainer>
+        <ActivityFeed>
+          <h2>Recent Activity</h2>
+          {dashboardData.recentActivities.map((activity, index) => (
+            <ClickableTask key={index} taskId={activity.taskId}>
+              <ActivityItem>
+                <ActivityIcon>
+                  <Activity size={16} />
+                </ActivityIcon>
+                <ActivityContent>
+                  <ActivityTitle>{activity.description}</ActivityTitle>
+                  <ActivityTime>{new Date(activity.timestamp).toLocaleString()}</ActivityTime>
+                </ActivityContent>
+              </ActivityItem>
+            </ClickableTask>
+          ))}
+          {dashboardData.recentActivities.length === 0 && (
+            <p style={{ color: '#64748b', textAlign: 'center', padding: '20px' }}>
+              No recent activities
+            </p>
+          )}
+        </ActivityFeed>
       </Content>
     </DashboardContainer>
   );

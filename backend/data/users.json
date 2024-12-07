@@ -46,5 +46,21 @@
     "role": "principalOfficer",
     "createdAt": "2024-12-07T13:39:36.596Z",
     "status": "active"
+  },
+  {
+    "id": "1733583831401",
+    "username": "Test",
+    "password": "$2a$10$bz4vnhVhKfPk1ru6CkiOVelYK19nTRq..MeWWCc3FhtiyXnmoKzd6",
+    "role": "principalOfficer",
+    "createdAt": "2024-12-07T15:03:51.401Z",
+    "status": "active"
+  },
+  {
+    "id": "1733584263130",
+    "username": "SN",
+    "password": "$2a$10$xNmHPIcIaOqExkxyl5HZuuWqoOQPiRajJ6IDeseKHpWX/yIKoi1gu",
+    "role": "seniorOfficer",
+    "createdAt": "2024-12-07T15:11:03.130Z",
+    "status": "active"
   }
 ]
