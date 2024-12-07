@@ -420,12 +420,19 @@ const AdminDashboard = () => {
   }, []);
 
   useEffect(() => {
-    if (tasks.length > 0) {
-      const filtered = tasks.filter(task => 
-        task.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        task.assignedOfficer.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+    if (Array.isArray(tasks)) {
+      const searchTermLower = (searchTerm || '').toLowerCase();
+      const filtered = tasks.filter(task => {
+        if (!task) return false;
+        
+        const nameMatch = task.name ? task.name.toLowerCase().includes(searchTermLower) : false;
+        const officerMatch = task.assignedOfficer ? task.assignedOfficer.toLowerCase().includes(searchTermLower) : false;
+        
+        return nameMatch || officerMatch;
+      });
       setFilteredTasks(filtered);
+    } else {
+      setFilteredTasks([]);
     }
   }, [searchTerm, tasks]);
 
@@ -436,11 +443,14 @@ const AdminDashboard = () => {
         throw new Error('Failed to fetch tasks');
       }
       const data = await response.json();
-      setTasks(data);
-      setFilteredTasks(data);
+      // Ensure we're setting an array
+      setTasks(Array.isArray(data) ? data : []);
+      setFilteredTasks(Array.isArray(data) ? data : []);
       setIsLoading(false);
     } catch (error) {
       console.error('Error fetching tasks:', error);
+      setTasks([]);
+      setFilteredTasks([]);
       setIsLoading(false);
     }
   };

@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Modal from 'react-modal';
 import { useAuth } from '../context/AuthProvider';
 import { Search, Filter, Clock, User, Link as LinkIcon, AlertCircle, X, FileText, Download } from 'lucide-react';
 import jsPDF from 'jspdf';
 
-// Styled Components
+// Styled Components (All your existing styled components remain the same)
 const StyledTaskList = styled.div`
   min-height: 100vh;
   background: #f7fafc;
@@ -308,34 +308,43 @@ const TaskList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [filterStatus, setFilterStatus] = useState('all');
 
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true);
-      const [tasksResponse, officersResponse] = await Promise.all([
-        fetch('http://localhost:5000/tasks'),
-        fetch('http://localhost:5000/senior-officers')
-      ]);
-
-      if (!tasksResponse.ok || !officersResponse.ok) {
-        throw new Error('Failed to fetch data');
-      }
-
-      const tasksData = await tasksResponse.json();
-      const officersData = await officersResponse.json();
-
-      setTasks(tasksData);
-      setSeniorOfficers(officersData);
-    } catch (err) {
-      setError('Failed to load data. Please try again later.');
-      console.error('Error fetching data:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // Debug tasks data
+  useEffect(() => {
+    console.log('Tasks received:', tasks);
+  }, [tasks]);
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [tasksResponse, officersResponse] = await Promise.all([
+          fetch('http://localhost:5000/tasks'),
+          fetch('http://localhost:5000/senior-officers')
+        ]);
+
+        if (!tasksResponse.ok || !officersResponse.ok) {
+          throw new Error('Failed to fetch data');
+        }
+
+        const tasksData = await tasksResponse.json();
+        const officersData = await officersResponse.json();
+
+        // Ensure tasks is always an array
+        setTasks(Array.isArray(tasksData) ? tasksData : []);
+        setSeniorOfficers(Array.isArray(officersData) ? officersData : []);
+      } catch (err) {
+        setError('Failed to load data. Please try again later.');
+        console.error('Error fetching data:', err);
+        // Initialize with empty arrays on error
+        setTasks([]);
+        setSeniorOfficers([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchData();
-  }, [fetchData]);
+  }, []);
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
@@ -355,7 +364,7 @@ const TaskList = () => {
         throw new Error('Failed to delete task');
       }
 
-      await fetchData();
+      setTasks(tasks.filter(task => task.id !== id));
     } catch (err) {
       setError('Failed to delete task. Please try again.');
       console.error('Error deleting task:', err);
@@ -369,14 +378,18 @@ const TaskList = () => {
       const response = await fetch(`http://localhost:5000/tasks/${currentTaskId}/delegate`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newOfficerId: selectedOfficer })
+        body: JSON.stringify({ newOfficer: selectedOfficer })
       });
 
       if (!response.ok) {
         throw new Error('Failed to delegate task');
       }
 
-      await fetchData();
+      const updatedTask = await response.json();
+      setTasks(tasks.map(task => 
+        task.id === currentTaskId ? updatedTask.task : task
+      ));
+
       setModalIsOpen(false);
       setSelectedOfficer('');
     } catch (err) {
@@ -390,43 +403,39 @@ const TaskList = () => {
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.getWidth();
       
-      // Add title
       doc.setFontSize(16);
       doc.text('Task List Report', pageWidth/2, 15, { align: 'center' });
       
-      // Add generation date
       doc.setFontSize(10);
       doc.text(`Generated on: ${new Date().toLocaleString()}`, pageWidth/2, 22, { align: 'center' });
       
-      // Set font size for content
       doc.setFontSize(12);
       
       let yPos = 30;
       const lineHeight = 7;
       
       filteredTasks.forEach((task, index) => {
-        // Check if we need a new page
         if (yPos > 280) {
           doc.addPage();
           yPos = 20;
         }
         
         doc.setFont('helvetica', 'bold');
-        doc.text(`${index + 1}. ${task.name}`, 10, yPos);
+        doc.text(`${index + 1}. ${task.name || 'Untitled Task'}`, 10, yPos);
         yPos += lineHeight;
         
         doc.setFont('helvetica', 'normal');
-        doc.text(`Status: ${task.status}`, 15, yPos);
+        doc.text(`Status: ${task.status || 'No Status'}`, 15, yPos);
         yPos += lineHeight;
         
-        doc.text(`Assigned to: ${task.assignedOfficer}`, 15, yPos);
+        doc.text(`Assigned to: ${task.assignedOfficer || 'Unassigned'}`, 15, yPos);
         yPos += lineHeight;
         
-        doc.text(`Deadline: ${task.deadline}`, 15, yPos);
+        doc.text(`Deadline: ${task.deadline || 'No Deadline'}`, 15, yPos);
         yPos += lineHeight;
         
-        // Split long descriptions into multiple lines
-        const descriptionLines = doc.splitTextToSize(task.description, pageWidth - 30);
+        const description = task.description || 'No description available';
+        const descriptionLines = doc.splitTextToSize(description, pageWidth - 30);
         doc.text(descriptionLines, 15, yPos);
         yPos += (lineHeight * descriptionLines.length) + 5;
       });
@@ -444,11 +453,11 @@ const TaskList = () => {
       const csvContent = [
         headers.join(','),
         ...filteredTasks.map(task => [
-          `"${task.name.replace(/"/g, '""')}"`,
-          task.status,
-          task.assignedOfficer,
-          task.deadline,
-          `"${task.description.replace(/"/g, '""')}"`
+          `"${(task.name || '').replace(/"/g, '""')}"`,
+          task.status || '',
+          task.assignedOfficer || '',
+          task.deadline || '',
+          `"${(task.description || '').replace(/"/g, '""')}"`
         ].join(','))
       ].join('\n');
 
@@ -463,14 +472,26 @@ const TaskList = () => {
     }
   };
 
-  const filteredTasks = tasks.filter(task => {
-    const matchesSearch = 
-      task.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      task.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      task.assignedOfficer.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = filterStatus === 'all' || task.status === filterStatus;
-    
+  const filteredTasks = (tasks || []).filter(task => {
+    if (!task || typeof task !== 'object') {
+      return false;
+    }
+
+    // Convert search term once
+    const searchLower = (searchTerm || '').toLowerCase();
+
+    // Handle search matching with complete null checking
+    const matchesSearch = searchTerm === '' || [
+      task?.name,
+      task?.description,
+      task?.assignedOfficer
+    ].some(field => 
+      typeof field === 'string' && field.toLowerCase().includes(searchLower)
+    );
+
+    // Handle status filtering with null checking
+    const matchesStatus = filterStatus === 'all' || task?.status === filterStatus;
+
     return matchesSearch && matchesStatus;
   });
 
@@ -552,22 +573,22 @@ const TaskList = () => {
             {paginatedTasks.map((task) => (
               <TaskItem key={task.id}>
                 <TaskHeader>
-                  <TaskName>{task.name}</TaskName>
-                  <StatusBadge status={task.status}>{task.status}</StatusBadge>
+                  <TaskName>{task?.name || 'Untitled Task'}</TaskName>
+                  <StatusBadge status={task?.status}>{task?.status || 'No Status'}</StatusBadge>
                 </TaskHeader>
                 
-                <TaskDescription>{task.description}</TaskDescription>
+                <TaskDescription>{task?.description || 'No description available'}</TaskDescription>
 
                 <TaskContent>
                   <TaskInfo>
                     <Clock size={16} />
-                    Deadline: {task.deadline}
+                    Deadline: {task?.deadline || 'No deadline set'}
                   </TaskInfo>
                   <TaskInfo>
                     <User size={16} />
-                    Assigned to: {task.assignedOfficer}
+                    Assigned to: {task?.assignedOfficer || 'Unassigned'}
                   </TaskInfo>
-                  {task.link && (
+                  {task?.link && (
                     <TaskInfo>
                       <LinkIcon size={16} />
                       <a href={task.link} target="_blank" rel="noopener noreferrer">
@@ -579,7 +600,7 @@ const TaskList = () => {
 
                 <ActionButtons>
                   {user?.role === 'Principal Officer' && 
-                   task.assignedOfficer === user.username && (
+                   task?.assignedOfficer === user?.username && (
                     <Button primary onClick={() => {
                       setCurrentTaskId(task.id);
                       setModalIsOpen(true);
