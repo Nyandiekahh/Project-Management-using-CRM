@@ -1,5 +1,5 @@
-// src/hooks/useUsers.js
 import { useState, useEffect } from 'react';
+import { API_URL } from '../config/api.js';
 
 export const useUsers = () => {
   const [users, setUsers] = useState([]);
@@ -9,7 +9,7 @@ export const useUsers = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await fetch('http://localhost:5000/user-management');
+        const response = await fetch(`${API_URL}/user-management`);
         if (!response.ok) throw new Error('Failed to fetch users');
         const data = await response.json();
         

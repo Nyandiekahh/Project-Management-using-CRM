@@ -8,10 +8,15 @@ const { uploadsDir } = require('./config/database');
 
 const app = express();
 
+// Environment variables
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+
 // Middleware
 app.use(bodyParser.json());
-app.use(cors());
-
+app.use(cors({
+  origin: FRONTEND_URL,
+  credentials: true
+}));
 // Ensure uploads directory exists
 const fs = require('fs');
 if (!fs.existsSync(uploadsDir)) {

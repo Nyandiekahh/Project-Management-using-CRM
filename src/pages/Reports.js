@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
 import { BarChart2, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
+import { API_URL } from '../config/api.js';
 
 const WelcomeSection = styled.div`
   margin-bottom: 30px;
@@ -191,7 +192,8 @@ const Reports = () => {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const response = await fetch('http://localhost:5000/tasks');
+        const response = await fetch(`${API_URL}/tasks`);
+        if (!response.ok) throw new Error('Failed to fetch tasks');
         const data = await response.json();
         setTasks(data);
         setFilteredTasks(data);

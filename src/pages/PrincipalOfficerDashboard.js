@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthProvider';
-import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import Sidebar from '../components/Sidebar';
 import Clock from '../components/Clock';
 import ClickableTask from '../components/ClickableTask';
+import { API_URL } from '../config/api.js';
 
 import { 
   ClipboardList, 
@@ -12,11 +12,7 @@ import {
   Users,
   AlertTriangle,
   Search,
-  Calendar,
   Activity,
-  BarChart,
-  Bell,
-  ChevronDown,
 } from 'lucide-react';
 
 const DashboardContainer = styled.div`
@@ -299,7 +295,6 @@ const LoadingSpinner = styled.div`
 
 const PrincipalOfficerDashboard = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -315,62 +310,63 @@ const PrincipalOfficerDashboard = () => {
   });
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, [user]);
 
   // Modified fetchDashboardData function
-const fetchDashboardData = async () => {
-  try {
-    setIsLoading(true);
-    // Only fetch tasks since that's what exists in your backend
-    const response = await fetch('http://localhost:5000/tasks');
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch dashboard data');
+  const fetchDashboardData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      // Only fetch tasks since that's what exists in your backend
+      const response = await fetch(`${API_URL}/tasks`);
+  
+      if (!response.ok) {
+        throw new Error('Failed to fetch dashboard data');
+      }
+  
+      const tasksData = await response.json();
+  
+      // Filter tasks for current PO
+      const userTasks = tasksData.filter(task => {
+        const assignees = task.assignedOfficer?.split(', ') || [];
+        return assignees.includes(user.username);
+      });
+  
+      // Calculate statistics
+      const stats = {
+        totalTasks: userTasks.length,
+        teamMembers: new Set(userTasks.map(task => task.assignedOfficer)).size,
+        completedTasks: userTasks.filter(task => task.status === 'Completed').length,
+        pendingReview: userTasks.filter(task => task.status === 'Pending Review').length
+      };
+  
+      // Get activities from tasks
+      const recentActivities = userTasks.map(task => ({
+        taskId: task.id,
+        description: `Task "${task.name}" - ${task.status}`,
+        timestamp: task.deadline
+      })).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 5);
+      
+      // Get upcoming deadlines from tasks
+      const upcomingDeadlines = userTasks
+        .filter(task => new Date(task.deadline) > new Date())
+        .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
+        .slice(0, 5);
+  
+      setDashboardData({
+        stats,
+        recentActivities,
+        upcomingDeadlines
+      });
+    } catch (err) {
+      setError('Failed to load dashboard data. Please try again later.');
+      console.error('Error fetching dashboard data:', err);
+    } finally {
+      setIsLoading(false);
     }
-
-    const tasksData = await response.json();
-
-    // Filter tasks for current PO
-    const userTasks = tasksData.filter(task => {
-      const assignees = task.assignedOfficer?.split(', ') || [];
-      return assignees.includes(user.username);
-    });
-
-    // Calculate statistics
-    const stats = {
-      totalTasks: userTasks.length,
-      teamMembers: new Set(userTasks.map(task => task.assignedOfficer)).size,
-      completedTasks: userTasks.filter(task => task.status === 'Completed').length,
-      pendingReview: userTasks.filter(task => task.status === 'Pending Review').length
-    };
-
-    // Get activities from tasks
-    const recentActivities = userTasks.map(task => ({
-      taskId: task.id, // Add this line
-      description: `Task "${task.name}" - ${task.status}`,
-      timestamp: task.deadline
-    })).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 5);
-    
-    // Get upcoming deadlines from tasks
-    const upcomingDeadlines = userTasks
-      .filter(task => new Date(task.deadline) > new Date())
-      .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
-      .slice(0, 5);
-
-    setDashboardData({
-      stats,
-      recentActivities,
-      upcomingDeadlines
-    });
-  } catch (err) {
-    setError('Failed to load dashboard data. Please try again later.');
-    console.error('Error fetching dashboard data:', err);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  }, [user]);
+  
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   const toggleSidebar = () => {
     setSidebarOpen(!isSidebarOpen);

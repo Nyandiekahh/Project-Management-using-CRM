@@ -5,19 +5,17 @@ import styled from 'styled-components';
 import Sidebar from '../components/Sidebar';
 import Clock from '../components/Clock';
 import ClickableTask from '../components/ClickableTask';
+import { API_URL } from '../config/api.js';
 
 import { 
   ClipboardList, 
   Clock as ClockIcon, 
-  Users,
   AlertTriangle,
   Search,
   Filter,
   Download,
   ChevronDown,
   Activity,
-  Calendar,
-  Bell,
   CheckCircle
 } from 'lucide-react';
 
@@ -209,14 +207,14 @@ const StatChange = styled.div`
     content: ${props => props.increase ? '"↑"' : '""'};
   }
 `;
-
+// eslint-disable-next-line
 const TasksContainer = styled.div`
   background-color: white;
   border-radius: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 `;
-
+// eslint-disable-next-line
 const TasksHeader = styled.div`
   padding: 24px;
   border-bottom: 1px solid #e2e8f0;
@@ -224,18 +222,18 @@ const TasksHeader = styled.div`
   justify-content: space-between;
   align-items: center;
 `;
-
+// eslint-disable-next-line
 const TaskTableWrapper = styled.div`
   overflow-x: auto;
 `;
-
+// eslint-disable-next-line
 const TaskTable = styled.table`
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
   font-size: 16px;
 `;
-
+// eslint-disable-next-line
 const TaskTableHeader = styled.th`
   background-color: #f8fafc;
   color: #475569;
@@ -253,7 +251,7 @@ const TaskTableHeader = styled.th`
     padding-right: 24px;
   }
 `;
-
+// eslint-disable-next-line
 const TaskRow = styled.tr`
   cursor: pointer;
   transition: all 0.2s;
@@ -266,7 +264,7 @@ const TaskRow = styled.tr`
     border-bottom: none;
   }
 `;
-
+// eslint-disable-next-line
 const TaskCell = styled.td`
   padding: 16px;
   border-bottom: 1px solid #e2e8f0;
@@ -281,7 +279,7 @@ const TaskCell = styled.td`
     padding-right: 24px;
   }
 `;
-
+// eslint-disable-next-line
 const StatusBadge = styled.span`
   display: inline-flex;
   align-items: center;
@@ -309,7 +307,7 @@ const StatusBadge = styled.span`
     }
   }};
 `;
-
+// eslint-disable-next-line
 const NoTasksMessage = styled.div`
   text-align: center;
   padding: 48px 20px;
@@ -449,6 +447,7 @@ const TimelineItem = styled.div`
 
 const SeniorOfficerDashboard = () => {
   const { user } = useAuth();
+  // eslint-disable-next-line
   const navigate = useNavigate();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
@@ -467,12 +466,13 @@ const SeniorOfficerDashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
+    // eslint-disable-next-line
   }, [user]);
 
   const fetchDashboardData = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('http://localhost:5000/tasks');
+      const response = await fetch(`${API_URL}/tasks`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch dashboard data');

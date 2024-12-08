@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Modal from 'react-modal';
 import { useAuth } from '../context/AuthProvider';
-import { Search, Filter, Clock, User, Link as LinkIcon, AlertCircle, X, FileText, Download } from 'lucide-react';
+import { Search, Clock, User, Link as LinkIcon, AlertCircle, X, FileText, Download } from 'lucide-react';
 import jsPDF from 'jspdf';
+import { API_URL } from '../config/api.js';
 
 // Styled Components
 const StyledTaskList = styled.div`
@@ -312,8 +313,8 @@ const TaskList = () => {
       try {
         setLoading(true);
         const [tasksResponse, officersResponse] = await Promise.all([
-          fetch('http://localhost:5000/tasks'),
-          fetch('http://localhost:5000/senior-officers')
+          fetch(`${API_URL}/tasks`),
+          fetch(`${API_URL}/senior-officers`)
         ]);
 
         if (!tasksResponse.ok || !officersResponse.ok) {
@@ -362,7 +363,7 @@ const TaskList = () => {
 
   const deleteTask = async (id) => {
     try {
-      const response = await fetch(`http://localhost:5000/tasks/${id}`, { method: 'DELETE' });
+      const response = await fetch(`${API_URL}/tasks/${id}`, { method: 'DELETE' });
       
       if (!response.ok) {
         throw new Error('Failed to delete task');
@@ -379,7 +380,7 @@ const TaskList = () => {
     if (!selectedOfficer) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/tasks/${currentTaskId}/delegate`, {
+      const response = await fetch(`${API_URL}/tasks/${currentTaskId}/delegate`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ newOfficer: selectedOfficer })

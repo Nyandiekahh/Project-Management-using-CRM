@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import Sidebar from '../components/Sidebar';
 import UserForm from '../components/UserForm';
 import { useAuth } from '../context/AuthProvider';
+import { API_URL } from '../config/api.js';
 
 const Content = styled.div`
   flex: 1;
@@ -101,6 +102,7 @@ const UserManagement = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  // eslint-disable-next-line
   const { user: currentUser } = useAuth();
 
   useEffect(() => {
@@ -109,7 +111,7 @@ const UserManagement = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('http://localhost:5000/user-management');
+      const response = await fetch(`${API_URL}/user-management`);
       if (!response.ok) throw new Error('Failed to fetch users');
       const data = await response.json();
       setUsers(data);
@@ -120,7 +122,7 @@ const UserManagement = () => {
 
   const handleCreateUser = async (userData) => {
     try {
-      const response = await fetch('http://localhost:5000/user-management', {
+      const response = await fetch(`${API_URL}/user-management`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData),
@@ -136,7 +138,7 @@ const UserManagement = () => {
 
   const handleUpdateUser = async (userData) => {
     try {
-      const response = await fetch(`http://localhost:5000/user-management/${userData.id}`, {
+      const response = await fetch(`${API_URL}/user-management/${userData.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData),
@@ -155,7 +157,7 @@ const UserManagement = () => {
     if (!window.confirm('Are you sure you want to delete this user?')) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/user-management/${userId}`, {
+      const response = await fetch(`${API_URL}/user-management/${userId}`, {
         method: 'DELETE',
       });
       

@@ -6,6 +6,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { addBusinessDays, formatDate, isHoliday } from '../utils/dateUtils';
 import { isSaturday, isSunday } from 'date-fns';
 import Select from 'react-select';
+import { API_URL } from '../config/api.js';
 
 const FormContainer = styled.div`
   background-color: white;
@@ -154,7 +155,7 @@ const TaskForm = ({ onSubmit, initialTask }) => {
   useEffect(() => {
     const fetchOfficers = async () => {
       try {
-        const response = await fetch('http://localhost:5000/user-management');
+        const response = await fetch(`${API_URL}/user-management`);
         if (!response.ok) throw new Error('Failed to fetch officers');
         const data = await response.json();
         
@@ -180,7 +181,8 @@ const TaskForm = ({ onSubmit, initialTask }) => {
     };
 
     fetchOfficers();
-  }, []);
+  }, [task.assignedOfficer]);  // Added the missing dependency
+
 
   useEffect(() => {
     if (initialTask) {

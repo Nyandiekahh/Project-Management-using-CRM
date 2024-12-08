@@ -5,9 +5,9 @@ import styled from 'styled-components';
 import Sidebar from '../components/Sidebar';
 import TaskForm from '../components/TaskForm';
 import Clock from '../components/Clock';
+import { API_URL } from '../config/api.js';
 import { 
   BarChart3, 
-  Users, 
   Clock as ClockIcon, 
   AlertTriangle,
   Edit2,
@@ -18,7 +18,6 @@ import {
   Filter,
   ChevronDown,
   Download,
-  Calendar
 } from 'lucide-react';
 
 // Styled Components
@@ -197,7 +196,7 @@ const StatChange = styled.div`
     content: ${props => props.increase ? '"↑"' : '""'};
   }
 `;
-
+// eslint-disable-next-line
 const ActionsBar = styled.div`
   display: flex;
   justify-content: space-between;
@@ -438,7 +437,7 @@ const AdminDashboard = () => {
 
   const fetchTasks = async () => {
     try {
-      const response = await fetch('http://localhost:5000/tasks');
+      const response = await fetch(`${API_URL}/tasks`);
       if (!response.ok) {
         throw new Error('Failed to fetch tasks');
       }
@@ -486,7 +485,7 @@ const AdminDashboard = () => {
     }
 
     if (task.id) {
-      fetch(`http://localhost:5000/tasks/${task.id}`, {
+      fetch(`${API_URL}/tasks/${task.id}`, {
         method: 'PUT',
         body: formData
       })
@@ -499,10 +498,11 @@ const AdminDashboard = () => {
           setEditingTask(null);
         })
         .catch(error => console.error('Error updating task:', error));
-    } else {
-      fetch('http://localhost:5000/tasks', {
-        method: 'POST',
-        body: formData})
+      } else {
+        fetch(`${API_URL}/tasks`, {
+          method: 'POST',
+          body: formData
+        })
         .then(response => response.json())
         .then(data => {
           setTasks(prevTasks => [...prevTasks, data]);
@@ -519,7 +519,7 @@ const AdminDashboard = () => {
 
   const handleDeleteTask = (taskId) => {
     if (window.confirm('Are you sure you want to delete this task?')) {
-      fetch(`http://localhost:5000/tasks/${taskId}`, {
+      fetch(`${API_URL}/tasks/${taskId}`, {
         method: 'DELETE'
       })
         .then(response => {

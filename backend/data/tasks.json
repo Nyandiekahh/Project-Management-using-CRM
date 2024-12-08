@@ -33,42 +33,6 @@
     "progress": "34"
   },
   {
-    "name": "sdgvfd ",
-    "description": "sjbv hjnv",
-    "deadline": "2024-08-29",
-    "assignedOfficer": "Principal Officer 4",
-    "documentUrl": null,
-    "id": 132702,
-    "status": "Assigned",
-    "assignedAt": "2024-07-16T00:58:31.332Z",
-    "content": "",
-    "progress": "84"
-  },
-  {
-    "name": "QWER",
-    "description": "QWER",
-    "deadline": "2024-08-09",
-    "assignedOfficer": "Principal Officer 5",
-    "documentUrl": null,
-    "id": 550932,
-    "status": "Assigned",
-    "assignedAt": "2024-08-05T04:19:47.487Z",
-    "content": "",
-    "progress": 0
-  },
-  {
-    "name": "awefdw",
-    "description": "QAWDWD",
-    "deadline": "2024-08-07",
-    "assignedOfficer": "Principal Officer 4",
-    "documentUrl": null,
-    "id": 235584,
-    "status": "Assigned",
-    "assignedAt": "2024-08-05T13:44:49.477Z",
-    "content": "",
-    "progress": 0
-  },
-  {
     "name": "Multer",
     "description": "Multer",
     "deadline": "2024-12-11",
@@ -101,18 +65,6 @@
     "id": 473358,
     "status": "Assigned",
     "assignedAt": "2024-12-07T01:41:15.750Z",
-    "content": "",
-    "progress": 0
-  },
-  {
-    "name": "task new",
-    "description": "task new",
-    "deadline": "2024-12-10",
-    "assignedOfficer": "Principal Officer 1",
-    "documentUrl": null,
-    "id": 286617,
-    "status": "Assigned",
-    "assignedAt": "2024-12-07T01:48:01.325Z",
     "content": "",
     "progress": 0
   },

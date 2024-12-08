@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthProvider';
 import { Eye, EyeOff, Lock, User, AlertCircle } from 'lucide-react';
 import './Login.css';
+import { API_URL } from '../config/api.js';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -33,7 +34,7 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/user-management/login', {
+      const response = await fetch(`${API_URL}/user-management/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
