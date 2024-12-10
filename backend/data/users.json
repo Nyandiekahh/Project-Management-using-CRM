@@ -56,11 +56,11 @@
     "status": "active"
   },
   {
-    "id": "1733584263130",
-    "username": "SN",
-    "password": "$2a$10$xNmHPIcIaOqExkxyl5HZuuWqoOQPiRajJ6IDeseKHpWX/yIKoi1gu",
-    "role": "seniorOfficer",
-    "createdAt": "2024-12-07T15:11:03.130Z",
+    "id": "1733815528650",
+    "username": "Winnie",
+    "password": "$2a$10$tQL4LjUSN8rn4oJXFYcA2uU/qzSecOM721K7LFvyMZ4yG2lxwo/ve",
+    "role": "principalOfficer",
+    "createdAt": "2024-12-10T07:25:28.650Z",
     "status": "active"
   }
 ]

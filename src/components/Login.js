@@ -1,8 +1,7 @@
-// src/components/Login.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthProvider';
-import { Eye, EyeOff, Lock, User, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Lock, User, AlertCircle, Database, Shield, Activity } from 'lucide-react';
 import './Login.css';
 import { API_URL } from '../config/api.js';
 
@@ -12,8 +11,36 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [loginAttempts, setLoginAttempts] = useState(0);
+  const [isLocked, setIsLocked] = useState(false);
+  const [lockTimer, setLockTimer] = useState(0);
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  const MAX_LOGIN_ATTEMPTS = 3;
+  const LOCK_DURATION = 300; // 5 minutes in seconds
+
+  useEffect(() => {
+    let interval;
+    if (isLocked && lockTimer > 0) {
+      interval = setInterval(() => {
+        setLockTimer((prev) => {
+          if (prev <= 1) {
+            setIsLocked(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isLocked, lockTimer]);
+
+  const formatLockTimer = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
 
   const getRoleBasedRedirect = (role) => {
     switch (role) {
@@ -30,6 +57,8 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isLocked) return;
+
     setError('');
     setIsLoading(true);
 
@@ -46,10 +75,20 @@ const Login = () => {
 
       if (response.ok) {
         await login(data.username, data.role);
+        setLoginAttempts(0);
         const redirectPath = getRoleBasedRedirect(data.role);
         navigate(redirectPath);
       } else {
-        setError(data.message || 'Invalid credentials. Please try again.');
+        const newAttempts = loginAttempts + 1;
+        setLoginAttempts(newAttempts);
+        
+        if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
+          setIsLocked(true);
+          setLockTimer(LOCK_DURATION);
+          setError(`Account temporarily locked. Please try again in ${formatLockTimer(LOCK_DURATION)}`);
+        } else {
+          setError(`Invalid credentials. ${MAX_LOGIN_ATTEMPTS - newAttempts} attempts remaining.`);
+        }
       }
     } catch (err) {
       setError('An error occurred. Please try again later.');
@@ -59,14 +98,33 @@ const Login = () => {
     }
   };
 
+  const features = [
+    { icon: Shield, title: 'Secure Access', description: 'Enterprise-grade security protocols' },
+    { icon: Database, title: 'Data Management', description: 'Centralized remuneration data' },
+    { icon: Activity, title: 'Real-time Analytics', description: 'Instant performance insights' }
+  ];
+
   return (
     <div className="login-container">
       <div className="login-left">
         <div className="animated-background">
           <div className="gradient-overlay"></div>
           <div className="content-overlay">
-            <h1>Project Management System</h1>
-            <p>Streamline your workflow. Enhance productivity.</p>
+            <div className="brand-logo">
+              <div className="logo-animation"></div>
+              <h1>RemuNet</h1>
+            </div>
+            <p className="tagline">Next-Generation Remuneration Management</p>
+            
+            <div className="features-grid">
+              {features.map((feature, index) => (
+                <div key={index} className="feature-card">
+                  <feature.icon className="feature-icon" />
+                  <h3>{feature.title}</h3>
+                  <p>{feature.description}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -75,8 +133,10 @@ const Login = () => {
         <div className="login-form-container">
           <div className="login-header">
             <div className="logo-container">
-              <div className="logo-circle"></div>
-              <h2>Login Portal</h2>
+              <div className="logo-circle">
+                <div className="logo-pulse"></div>
+              </div>
+              <h2>Welcome to RemuNet</h2>
             </div>
             {error && (
               <div className="error-alert">
@@ -96,6 +156,7 @@ const Login = () => {
                   onChange={(e) => setUsername(e.target.value)}
                   required
                   placeholder="Username"
+                  disabled={isLocked}
                 />
                 <div className="input-focus-effect"></div>
               </div>
@@ -110,11 +171,13 @@ const Login = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   placeholder="Password"
+                  disabled={isLocked}
                 />
                 <button
                   type="button"
                   className="password-toggle"
                   onClick={() => setShowPassword(!showPassword)}
+                  disabled={isLocked}
                 >
                   {showPassword ? <EyeOff /> : <Eye />}
                 </button>
@@ -124,7 +187,7 @@ const Login = () => {
 
             <div className="form-options">
               <label className="checkbox-container">
-                <input type="checkbox" />
+                <input type="checkbox" disabled={isLocked} />
                 <span className="checkmark"></span>
                 Remember me
               </label>
@@ -135,10 +198,14 @@ const Login = () => {
 
             <button 
               type="submit" 
-              className={`submit-btn ${isLoading ? 'loading' : ''}`}
-              disabled={isLoading}
+              className={`submit-btn ${isLoading ? 'loading' : ''} ${isLocked ? 'locked' : ''}`}
+              disabled={isLoading || isLocked}
             >
-              <span className="btn-text">{isLoading ? 'Signing in...' : 'Sign in'}</span>
+              <span className="btn-text">
+                {isLocked 
+                  ? `Locked (${formatLockTimer(lockTimer)})` 
+                  : isLoading ? 'Signing in...' : 'Sign in'}
+              </span>
               <span className="btn-loader"></span>
             </button>
           </form>

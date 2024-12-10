@@ -3,10 +3,9 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthProvider';
 
-const ProtectedRoute = ({ component: Component, role, ...rest }) => {
+const ProtectedRoute = ({ component: Component, role }) => {
   const { user } = useAuth();
 
-  // If not logged in, redirect to login
   if (!user) {
     return <Navigate to="/login" replace />;
   }
@@ -29,7 +28,7 @@ const ProtectedRoute = ({ component: Component, role, ...rest }) => {
   }
 
   // If everything is okay, render the protected component
-  return <Component {...rest} />;
+  return <Component />;
 };
 
 export default ProtectedRoute;
